@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'scala'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+ext {
+    scalaVersion = "2.13.12"
+    akkaVersion = "2.8.5"
+    akkaHttpVersion = "10.5.3"
+    jacksonVersion = "2.16.0"
+    scalaBinaryVersion = "2.13"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    // Scala std lib
+    implementation "org.scala-lang:scala-library:$scalaVersion"
+
+    // Jackson for JSON
+    implementation "com.fasterxml.jackson.module:jackson-module-scala_$scalaBinaryVersion:2.16.0"
+
+    // Config
+    implementation "com.typesafe:config:1.4.3"
+
+    // Database connection and migration
+    implementation "org.postgresql:postgresql:42.7.5"
+    implementation "org.flywaydb:flyway-database-postgresql:11.2.0"
+
+    // Spring Boot
+    implementation "org.springframework.boot:spring-boot-starter:3.5.4"
+    implementation "org.springframework.boot:spring-boot-starter-jdbc:3.5.4"
+
+    // Lombok (compileOnly)
+    compileOnly "org.projectlombok:lombok:1.18.36"
+    annotationProcessor "org.projectlombok:lombok:1.18.36"
+
+    // Akka core
+    implementation "com.typesafe.akka:akka-actor-typed_$scalaBinaryVersion:$akkaVersion"
+    implementation "com.typesafe.akka:akka-stream_2.13:$akkaVersion"
+    implementation "com.typesafe.akka:akka-http_$scalaBinaryVersion:$akkaHttpVersion"
+    implementation "com.typesafe.akka:akka-http-jackson_$scalaBinaryVersion:$akkaHttpVersion"
+
+    // Akka HTTP
+    implementation "com.typesafe.akka:akka-http-core_2.13:$akkaHttpVersion"
+}
+
+test {
+    useJUnitPlatform()
+}

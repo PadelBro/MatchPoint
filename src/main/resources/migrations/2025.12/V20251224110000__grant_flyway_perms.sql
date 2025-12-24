@@ -1,0 +1,8 @@
+-- CREATE USER flyway_user WITH PASSWORD 'flyway_password';
+--
+-- GRANT USAGE ON SCHEMA public TO flyway_user;
+-- GRANT USAGE, CREATE ON SCHEMA public TO flyway_user;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO flyway_user;
+-- ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO flyway_user;
+--
+-- ALTER SCHEMA public OWNER TO flyway_user;
