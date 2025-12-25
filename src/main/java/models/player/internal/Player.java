@@ -23,6 +23,15 @@ public class Player {
     @NonNull
     String homeAddress;
 
+    @NonNull
+    Gender gender;
+
+    @NonNull
+    Side hand;
+
+    @NonNull
+    Side courtSide;
+
     String playtomicProfileUrl;
 
     Long createdAt;
