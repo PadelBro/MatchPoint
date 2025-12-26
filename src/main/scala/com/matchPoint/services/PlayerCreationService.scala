@@ -36,21 +36,32 @@ class PlayerCreationService(playerRepo: PlayerRepository)(implicit ec: Execution
   }
 
   private def validate(request: UpsertPlayerRequest): Future[Unit] = {
-    if (request.getUsername.trim.length < 3)
-      throw new IllegalArgumentException("username must be at least 3 characters")
+    val username = request.getUsername.trim
 
-    try new URL(request.getPlaytomicProfileUrl)
-    catch {
-      case _: Exception =>
-        throw new IllegalArgumentException("invalid playtomic profile Url")
-    }
+    if (username.length < 3 || username.length > 30)
+      return Future.failed(
+        new IllegalArgumentException("username must be between 3 and 30 characters")
+      )
 
-    playerRepo
-      .getByUsername(request.getUsername)
-      .map {
-        case Some(_) => throw new IllegalArgumentException("username already taken")
-        case None => ()
+    Option(request.getPlaytomicProfileUrl)
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .foreach { url =>
+        try new URL(url)
+        catch {
+          case _: Exception =>
+            return Future.failed(
+              new IllegalArgumentException("invalid playtomic profile URL")
+            )
+        }
       }
+
+    playerRepo.getByUsername(username).flatMap {
+      case Some(_) =>
+        Future.failed(new IllegalArgumentException("username already taken"))
+      case None =>
+        Future.successful(())
+    }
   }
 
   def getPlayer(playerId: UUID): Future[Option[Player]] = {
