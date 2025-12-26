@@ -3,14 +3,14 @@ package com.matchPoint.api
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
 import com.matchPoint.helpers.JacksonSupport._
-import com.matchPoint.services.PlayerCreationService
+import com.matchPoint.services.PlayerService
 import models.player.external.UpsertPlayerRequest
 import org.springframework.stereotype.Service
 
 import scala.concurrent.ExecutionContext
 
 @Service
-class PlayerRoutes(service: PlayerCreationService)(implicit ec: ExecutionContext)
+class PlayerRoutes(service: PlayerService)(implicit ec: ExecutionContext)
   extends Directives {
 
   val routes: Route =
