@@ -28,4 +28,11 @@ public enum RatingZone {
 
     @JsonCreator
     RatingZone(String value) {this.value = Objects.requireNonNull(value);}
+
+    public static RatingZone fromValue(String value) {
+        for (RatingZone zone : RatingZone.values()) {
+            if (zone.value.equals(value)) return zone;
+        }
+        throw new IllegalArgumentException("Unknown RatingZone: " + value);
+    }
 }

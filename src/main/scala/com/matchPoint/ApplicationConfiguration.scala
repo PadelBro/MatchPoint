@@ -4,8 +4,9 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import com.fasterxml.jackson.databind.{ObjectMapper, PropertyNamingStrategies}
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.matchPoint.api.PlayerRoutes
+import com.matchPoint.api.{ApiRoutes, PlayerRoutes}
 import org.springframework.context.annotation.{Bean, Configuration}
 
 import java.util.concurrent.Executors
@@ -22,6 +23,8 @@ class ApplicationConfiguration {
   def objectMapper(): ObjectMapper = {
     val mapper = new ObjectMapper()
     mapper.registerModule(DefaultScalaModule)
+    mapper.registerModule(new JavaTimeModule())
+    mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
     mapper
   }
@@ -35,7 +38,7 @@ class ApplicationConfiguration {
   @Bean
   def startServer(
                    system: ActorSystem[Nothing],
-                   routes: PlayerRoutes
+                   routes: ApiRoutes
                  ): Future[Http.ServerBinding] = {
     implicit val sys = system
     Http().newServerAt("localhost", 8080).bind(routes.routes)
