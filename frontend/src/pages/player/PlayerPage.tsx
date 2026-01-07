@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Player } from "../types";
+import { Player } from "../../types";
 
 export function PlayerPage() {
     const { playerId } = useParams<{ playerId: string }>();

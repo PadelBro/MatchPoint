@@ -5,7 +5,7 @@ import com.matchPoint.helpers.JdbcWrapperTrait
 import models.general.JacksonRowMapper
 import models.player.internal.Player
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.jdbc.core.namedparam.{MapSqlParameterSource, NamedParameterJdbcTemplate}
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 
 import java.util.UUID
@@ -29,9 +29,7 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |  playtomic_profile_url,
         |  gender,
         |  hand,
-        |  court_side,
-        |  created_at,
-        |  updated_at
+        |  court_side
         |) VALUES (
         |  :id,
         |  :username,
@@ -40,9 +38,7 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |  :playtomicProfileUrl,
         |  :gender,
         |  :hand,
-        |  :courtSide,
-        |  extract(epoch from now()) * 1000,
-        |  extract(epoch from now()) * 1000
+        |  :courtSide
         |)
         |ON CONFLICT (id) DO UPDATE SET
         |  username = EXCLUDED.username,

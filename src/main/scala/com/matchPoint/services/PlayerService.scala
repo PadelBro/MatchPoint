@@ -49,7 +49,7 @@ class PlayerService(playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
   private def buildFromRequest(playerRequest: UpsertPlayerRequest): Player = {
     Player
       .builder()
-      .id(playerRequest.getId)
+      .id(Option(playerRequest.getId).getOrElse(java.util.UUID.randomUUID()))
       .username(playerRequest.getUsername)
       .ratingZone(playerRequest.getRatingZone)
       .homeAddress(playerRequest.getHomeAddress)

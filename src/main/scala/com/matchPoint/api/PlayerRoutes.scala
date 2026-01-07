@@ -15,7 +15,7 @@ class PlayerRoutes(service: PlayerService)(implicit ec: ExecutionContext)
 
   val routes: Route =
     handleExceptions(ApiExceptionHandler.handler) {
-      pathPrefix("api" / "players") {
+      pathPrefix("players") {
         concat(
           post {
             pathEndOrSingleSlash {

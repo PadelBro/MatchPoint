@@ -5,7 +5,9 @@ import akka.http.scaladsl.model.MediaTypes._
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest}
 import akka.http.scaladsl.unmarshalling._
 import akka.stream.Materializer
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind._
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
 import scala.concurrent.duration._
@@ -16,7 +18,9 @@ import scala.reflect.ClassTag
 object JacksonSupport {
 
   private val mapper = new ObjectMapper()
-  mapper.registerModule(DefaultScalaModule)
+    .registerModule(DefaultScalaModule)
+    .registerModule(new JavaTimeModule())
+    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
   implicit def JacksonMarshaller: ToEntityMarshaller[AnyRef] = {
     Marshaller.withFixedContentType(`application/json`) { obj =>

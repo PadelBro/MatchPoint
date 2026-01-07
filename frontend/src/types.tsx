@@ -11,3 +11,16 @@ export interface Player {
   courtSide: Side;
   playtomicProfileUrl?: string;
 }
+
+export interface Tournament {
+  id: string;
+  name: string;
+  description?: string;
+  city: string;
+  prizes?: string;
+  startDate: number; // epoch millis
+  endDate: number;   // epoch millis
+  organizerIds: string[];
+  status: "PENDING" | "ACTIVE" | "COMPLETED";
+  ratingZones: string[];
+}

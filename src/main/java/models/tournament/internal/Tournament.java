@@ -1,4 +1,4 @@
-package models.tournament;
+package models.tournament.internal;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -6,7 +6,6 @@ import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 import models.player.internal.RatingZone;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,10 +27,10 @@ public class Tournament {
     String prizes;
 
     @NonNull
-    Instant startDate;
+    Long startDate;
 
     @NonNull
-    Instant endDate;
+    Long endDate;
 
     @NonNull
     List<UUID> organizerIds;

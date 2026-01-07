@@ -1,7 +1,9 @@
 package models.general;
 
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.postgresql.util.PGobject;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
@@ -25,19 +27,41 @@ public class JacksonRowMapper<T> implements RowMapper<T> {
         try {
             Map<String, Object> rowMap = new HashMap<>();
             ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
 
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName = metaData.getColumnLabel(i); // getColumnLabel respects AS aliases
-                Object columnValue = rs.getObject(i);
-                rowMap.put(columnName, columnValue);
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                String columnName = metaData.getColumnLabel(i);
+                Object value = rs.getObject(i);
+
+                if (value instanceof PGobject pg) {
+                    if ("json".equals(pg.getType()) || "jsonb".equals(pg.getType())) {
+                        value = parseJson(pg.getValue());
+                    }
+                }
+
+                else if (value instanceof String str && looksLikeJson(str)) {
+                    value = parseJson(str);
+                }
+
+                rowMap.put(columnName, value);
             }
 
-            // Convert Map -> POJO
             return mapper.convertValue(rowMap, javaType);
 
         } catch (Exception e) {
-            throw new SQLException("Failed to map row to " + javaType.getRawClass().getName(), e);
+            throw new SQLException(
+                    "Failed to map row to " + javaType.getRawClass().getName(),
+                    e
+            );
         }
+    }
+
+    private Object parseJson(String json) throws Exception {
+        JsonNode node = mapper.readTree(json);
+        return node.isArray() || node.isObject() ? node : json;
+    }
+
+    private boolean looksLikeJson(String value) {
+        String trimmed = value.trim();
+        return trimmed.startsWith("{") || trimmed.startsWith("[");
     }
 }

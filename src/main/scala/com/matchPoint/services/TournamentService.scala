@@ -1,13 +1,16 @@
 package com.matchPoint.services
 
 import com.matchPoint.repositories.TournamentRepository
-import models.tournament.Tournament
+import models.player.internal.RatingZone
+import models.tournament.external.UpsertTournamentRequest
+import models.tournament.internal.Tournament
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters.{CollectionHasAsScala, SeqHasAsJava}
 
 @Service
 @Autowired
@@ -15,28 +18,46 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  def upsert(tournament: Tournament): Future[Tournament] = {
-    validate(tournament)
-    logger.info(s"Upserting tournament: id=${tournament.getId} name='${tournament.getName}'")
-    tournamentRepo.upsert(tournament).map { t =>
+  def upsert(tournamentRequest: UpsertTournamentRequest): Future[Tournament] = {
+    validate(tournamentRequest)
+    logger.info(s"Upserting tournament: id=${tournamentRequest.getId} name='${tournamentRequest.getName}'")
+    val preparedTournament = buildFromRequest(tournamentRequest)
+    tournamentRepo.upsert(preparedTournament).map { t =>
       logger.info(s"Tournament upserted successfully: id=${t.getId} name='${t.getName}'")
       t
     }.recover { case ex =>
-      logger.error(s"Failed to upsert tournament id=${tournament.getId}, reason=${ex.getMessage}")
+      logger.error(s"Failed to upsert tournament id=${preparedTournament.getId}, reason=${ex.getMessage}")
       throw ex
     }
   }
 
-  private def validate(tournament: Tournament): Unit = {
-    if (tournament.getStartDate.isAfter(tournament.getEndDate))
+  private def validate(tournamentRequest: UpsertTournamentRequest): Unit = {
+    if (tournamentRequest.getStartDate.isAfter(tournamentRequest.getEndDate))
       throw new IllegalArgumentException("Start date must be before end date")
 
-    if (tournament.getOrganizerIds.isEmpty)
+    if (tournamentRequest.getOrganizerIds.isEmpty)
       throw new IllegalArgumentException("At least one organizer is required")
 
-    if (tournament.getRatingZones.isEmpty)
+    if (tournamentRequest.getRatingZones.isEmpty)
       throw new IllegalArgumentException("At least one rating zone is required")
   }
+
+  private def buildFromRequest(tournamentRequest: UpsertTournamentRequest): Tournament = {
+    Tournament
+      .builder()
+      .id(Option(tournamentRequest.getId).getOrElse(java.util.UUID.randomUUID()))
+      .name(tournamentRequest.getName)
+      .description(tournamentRequest.getDescription)
+      .city(tournamentRequest.getCity)
+      .prizes(tournamentRequest.getPrizes)
+      .startDate(tournamentRequest.getStartDate.toEpochMilli)
+      .endDate(tournamentRequest.getEndDate.toEpochMilli)
+      .organizerIds(tournamentRequest.getOrganizerIds)
+      .status(tournamentRequest.getStatus)
+      .ratingZones(tournamentRequest.getRatingZones.asScala.map(RatingZone.fromValue).toList.asJava)
+      .build()
+  }
+
 
   def getTournamentById(tournamentId: UUID): Future[Option[Tournament]] = {
     tournamentRepo.getById(tournamentId).map { result =>

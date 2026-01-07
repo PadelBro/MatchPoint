@@ -3,7 +3,7 @@ package com.matchPoint.repositories
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.matchPoint.helpers.JdbcWrapperTrait
 import models.general.JacksonRowMapper
-import models.tournament.Tournament
+import models.tournament.internal.Tournament
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
@@ -47,11 +47,11 @@ class TournamentRepository(
       """
         |INSERT INTO tournament (
         |  id, name, description, city, prizes, start_date, end_date, status,
-        |  organizer_ids, rating_zones, created_at, updated_at
+        |  organizer_ids, rating_zones
         |)
         |VALUES (
         |  :id, :name, :description, :city, :prizes, :startDate, :endDate, :status,
-        |  :organizerIds, :ratingZones, :createdAt, :updatedAt
+        |  :organizerIds::jsonb, :ratingZones::jsonb
         |)
         |ON CONFLICT (id) DO UPDATE SET
         |  name = EXCLUDED.name,
@@ -63,7 +63,7 @@ class TournamentRepository(
         |  status = EXCLUDED.status,
         |  organizer_ids = EXCLUDED.organizer_ids,
         |  rating_zones = EXCLUDED.rating_zones,
-        |  updated_at = EXCLUDED.updated_at
+        |  updated_at = extract(epoch from now()) * 1000
         |RETURNING *
         |""".stripMargin,
       Map(
@@ -72,13 +72,11 @@ class TournamentRepository(
         "description" -> tournament.getDescription,
         "city" -> tournament.getCity,
         "prizes" -> tournament.getPrizes,
-        "startDate" -> tournament.getStartDate.toEpochMilli,
-        "endDate" -> tournament.getEndDate.toEpochMilli,
-        "status" -> tournament.getStatus.name(),
+        "startDate" -> tournament.getStartDate,
+        "endDate" -> tournament.getEndDate,
+        "status" -> tournament.getStatus.value,
         "organizerIds" -> mapper.writeValueAsString(tournament.getOrganizerIds),
-        "ratingZones" -> mapper.writeValueAsString(tournament.getRatingZones),
-        "createdAt" -> tournament.getCreatedAt,
-        "updatedAt" -> tournament.getUpdatedAt
+        "ratingZones" -> mapper.writeValueAsString(tournament.getRatingZones)
       )
     )
   }
