@@ -5,7 +5,7 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 import models.player.internal.Gender;
-import models.player.internal.RatingZone;
+import models.player.internal.Rating;
 import models.player.internal.Side;
 
 import java.util.UUID;
@@ -21,7 +21,7 @@ public class UpsertPlayerRequest {
     String username;
 
     @NonNull
-    RatingZone ratingZone;
+    Rating rating;
 
     @NonNull
     String homeAddress;

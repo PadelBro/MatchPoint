@@ -51,7 +51,7 @@ export function PlayerPage() {
                 </h1>
 
                 <p className="text-gray-700">
-                    <strong>Rating:</strong> {player.ratingZone}
+                    <strong>Rating:</strong> {player.rating}
                 </p>
 
                 <p className="text-gray-700">

@@ -24,9 +24,9 @@ class PlayerService(playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
       player <- playerRepo.upsert(preparedPlayer)
     } yield {
       logger.info(
-        "player_upserted id={} ratingZone={} gender={} hand={} courtSide={}",
+        "player_upserted id={} rating={} gender={} hand={} courtSide={}",
         player.getId,
-        player.getRatingZone,
+        player.getRating,
         player.getGender,
         player.getHand,
         player.getCourtSide
@@ -51,7 +51,7 @@ class PlayerService(playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
       .builder()
       .id(Option(playerRequest.getId).getOrElse(java.util.UUID.randomUUID()))
       .username(playerRequest.getUsername)
-      .ratingZone(playerRequest.getRatingZone)
+      .rating(playerRequest.getRating)
       .homeAddress(playerRequest.getHomeAddress)
       .hand(playerRequest.getHand)
       .gender(playerRequest.getGender)

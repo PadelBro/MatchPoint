@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 type FieldErrors = Partial<Record<
     | "username"
-    | "ratingZone"
+    | "rating"
     | "gender"
     | "hand"
     | "courtSide"
@@ -16,7 +16,7 @@ export function PlayerRegisterPage() {
     const navigate = useNavigate();
 
     const [username, setUsername] = useState("");
-    const [ratingZone, setRatingZone] = useState("");
+    const [rating, setRating] = useState("");
     const [homeAddress, setHomeAddress] = useState("");
     const [playtomicProfileUrl, setPlaytomicProfileUrl] = useState("");
     const [gender, setGender] = useState("");
@@ -43,7 +43,7 @@ export function PlayerRegisterPage() {
         else if (username.trim().length < 3 || username.trim().length > 30)
             newErrors.username = "Name must be between 3 and 30 characters";
 
-        if (!ratingZone) newErrors.ratingZone = "Rating zone is required";
+        if (!rating) newErrors.rating = "Rating is required";
         if (!gender) newErrors.gender = "Gender is required";
         if (!hand) newErrors.hand = "Dominant hand is required";
         if (!courtSide) newErrors.courtSide = "Court side is required";
@@ -67,7 +67,7 @@ export function PlayerRegisterPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username: username.trim(),
-                    ratingZone,
+                    rating,
                     homeAddress: homeAddress.trim() || undefined,
                     playtomicProfileUrl: playtomicProfileUrl.trim() || undefined,
                     hand,
@@ -133,34 +133,38 @@ export function PlayerRegisterPage() {
                 {/* Rating Zone */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">
-                        Rating Zone <span className="text-red-500">*</span>
+                        Rating <span className="text-red-500">*</span>
                     </label>
                     <select
-                        value={ratingZone}
-                        onChange={e => setRatingZone(e.target.value)}
-                        className={inputClass(!!errors.ratingZone)}
+                        value={rating}
+                        onChange={e => setRating(e.target.value)}
+                        className={inputClass(!!errors.rating)}
                     >
-                        <option value="">Select Rating Zone</option>
-                        <option value="0.0-0.5">0.0 – 0.5</option>
-                        <option value="0.5-1.0">0.5 – 1.0</option>
-                        <option value="1.0-1.5">1.0 – 1.5</option>
-                        <option value="1.5-2.0">1.5 – 2.0</option>
-                        <option value="2.0-2.5">2.0 – 2.5</option>
-                        <option value="2.5-3.0">2.5 – 3.0</option>
-                        <option value="3.0-3.5">3.0 – 3.5</option>
-                        <option value="3.5-4.0">3.5 – 4.0</option>
-                        <option value="4.0-4.5">4.0 – 4.5</option>
-                        <option value="4.5-5.0">4.5 – 5.0</option>
-                        <option value="5.0-5.5">5.0 – 5.5</option>
-                        <option value="5.5-6.0">5.5 – 6.0</option>
-                        <option value="6.0-6.5">6.0 – 6.5</option>
-                        <option value="6.5-7.0">6.5 – 7.0</option>
+                        <option value="">Select Rating</option>
+                        <option value="0.0">0.0</option>
+                        <option value="0.5">0.5</option>
+                        <option value="1.0">1.0</option>
+                        <option value="1.5">1.5</option>
+                        <option value="2.0">2.0</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3.0">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4.0">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5.0">5.0</option>
+                        <option value="5.5">5.5</option>
+                        <option value="6.0">6.0</option>
+                        <option value="6.5">6.5</option>
+                        <option value="7.0">7.0</option>
                     </select>
-                    {errors.ratingZone && (
+                    {errors.rating && (
                         <p className="text-sm text-red-600 mt-1">
-                            {errors.ratingZone}
+                            {errors.rating}
                         </p>
                     )}
+                    <p className="text-xs text-gray-500 mt-1">
+                        E.g. 3.18 = 3.0, 3.32 = 3.5, 3.88 = 4.0 etc.
+                    </p>
                 </div>
 
                 {/* City */}

@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
+import models.player.internal.Rating;
 import models.tournament.internal.TournamentStatus;
 
 import java.time.Instant;
@@ -40,5 +41,8 @@ public class UpsertTournamentRequest {
     TournamentStatus status;
 
     @NonNull
-    List<String> ratingZones;
+    Rating minRating;
+
+    @NonNull
+    Rating maxRating;
 }

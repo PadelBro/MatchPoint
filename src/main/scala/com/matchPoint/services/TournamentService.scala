@@ -1,7 +1,7 @@
 package com.matchPoint.services
 
 import com.matchPoint.repositories.TournamentRepository
-import models.player.internal.RatingZone
+import models.player.internal.Rating
 import models.tournament.external.UpsertTournamentRequest
 import models.tournament.internal.Tournament
 import org.slf4j.LoggerFactory
@@ -37,9 +37,6 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
 
     if (tournamentRequest.getOrganizerIds.isEmpty)
       throw new IllegalArgumentException("At least one organizer is required")
-
-    if (tournamentRequest.getRatingZones.isEmpty)
-      throw new IllegalArgumentException("At least one rating zone is required")
   }
 
   private def buildFromRequest(tournamentRequest: UpsertTournamentRequest): Tournament = {
@@ -54,7 +51,8 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
       .endDate(tournamentRequest.getEndDate.toEpochMilli)
       .organizerIds(tournamentRequest.getOrganizerIds)
       .status(tournamentRequest.getStatus)
-      .ratingZones(tournamentRequest.getRatingZones.asScala.map(RatingZone.fromValue).toList.asJava)
+      .minRating(tournamentRequest.getMinRating)
+      .maxRating(tournamentRequest.getMaxRating)
       .build()
   }
 

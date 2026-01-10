@@ -16,7 +16,7 @@ export function MainPage() {
 
                 <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 justify-center">
                     <Link
-                        to="/register"
+                        to="/players/register"
                         className="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded transition-colors"
                     >
                         Register Player

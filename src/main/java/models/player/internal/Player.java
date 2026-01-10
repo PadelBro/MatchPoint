@@ -18,7 +18,7 @@ public class Player {
     String username;
 
     @NonNull
-    RatingZone ratingZone;
+    Rating rating;
 
     @NonNull
     String homeAddress;

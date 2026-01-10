@@ -24,7 +24,7 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |INSERT INTO player (
         |  id,
         |  username,
-        |  rating_zone,
+        |  rating,
         |  home_address,
         |  playtomic_profile_url,
         |  gender,
@@ -33,7 +33,7 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |) VALUES (
         |  :id,
         |  :username,
-        |  :ratingZone,
+        |  :rating,
         |  :homeAddress,
         |  :playtomicProfileUrl,
         |  :gender,
@@ -42,7 +42,7 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |)
         |ON CONFLICT (id) DO UPDATE SET
         |  username = EXCLUDED.username,
-        |  rating_zone = EXCLUDED.rating_zone,
+        |  rating = EXCLUDED.rating,
         |  home_address = EXCLUDED.home_address,
         |  playtomic_profile_url = EXCLUDED.playtomic_profile_url,
         |  gender = EXCLUDED.gender,
@@ -54,7 +54,7 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
       Map(
         "id" -> Option(player.getId).getOrElse(java.util.UUID.randomUUID()),
         "username" -> player.getUsername,
-        "ratingZone" -> player.getRatingZone.value,
+        "rating" -> player.getRating.value,
         "homeAddress" -> player.getHomeAddress,
         "playtomicProfileUrl" -> player.getPlaytomicProfileUrl,
         "gender" -> player.getGender.value,
