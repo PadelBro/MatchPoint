@@ -20,7 +20,7 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
 
   def upsert(tournamentRequest: UpsertTournamentRequest): Future[Tournament] = {
     validate(tournamentRequest)
-    logger.info(s"Upserting tournament: id=${tournamentRequest.getId} name='${tournamentRequest.getName}'")
+    logger.info(s"Upserting tournament: ${tournamentRequest}'")
     val preparedTournament = buildFromRequest(tournamentRequest)
     tournamentRepo.upsert(preparedTournament).map { t =>
       logger.info(s"Tournament upserted successfully: id=${t.getId} name='${t.getName}'")

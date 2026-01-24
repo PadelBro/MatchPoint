@@ -51,7 +51,7 @@ class TournamentRepository(
         |)
         |VALUES (
         |  :id, :name, :description, :city, :prizes, :startDate, :endDate, :status,
-        |  :organizerIds::jsonb, min_rating, max_rating
+        |  :organizerIds::jsonb, :min_rating, :max_rating
         |)
         |ON CONFLICT (id) DO UPDATE SET
         |  name = EXCLUDED.name,
@@ -77,8 +77,8 @@ class TournamentRepository(
         "endDate" -> tournament.getEndDate,
         "status" -> tournament.getStatus.value,
         "organizerIds" -> mapper.writeValueAsString(tournament.getOrganizerIds),
-        "minRating" -> mapper.writeValueAsString(tournament.getMinRating),
-        "maxRating" -> mapper.writeValueAsString(tournament.getMaxRating)
+        "min_rating" -> tournament.getMinRating.value,
+        "max_rating" -> tournament.getMaxRating.value
       )
     )
   }
