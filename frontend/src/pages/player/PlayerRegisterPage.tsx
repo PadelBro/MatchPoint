@@ -4,59 +4,75 @@ import { useNavigate } from "react-router-dom";
 type FieldErrors = Partial<Record<
     | "username"
     | "rating"
+    | "homeAddress"
+    | "playtomicProfileUrl"
     | "gender"
     | "hand"
     | "courtSide"
-    | "playtomicProfileUrl"
     | "form",
     string
 >>;
 
+const RATING_OPTIONS = [
+    "0.0", "0.5", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5",
+    "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"
+];
+
 export function PlayerRegisterPage() {
     const navigate = useNavigate();
 
-    const [username, setUsername] = useState("");
-    const [rating, setRating] = useState("");
-    const [homeAddress, setHomeAddress] = useState("");
-    const [playtomicProfileUrl, setPlaytomicProfileUrl] = useState("");
-    const [gender, setGender] = useState("");
-    const [hand, setHand] = useState("");
-    const [courtSide, setCourtSide] = useState("");
+    const [form, setForm] = useState({
+        username: "",
+        rating: "",
+        homeAddress: "",
+        playtomicProfileUrl: "",
+        gender: "",
+        hand: "",
+        courtSide: "",
+    });
 
     const [errors, setErrors] = useState<FieldErrors>({});
     const [submitting, setSubmitting] = useState(false);
 
     const inputClass = (hasError?: boolean) =>
-        `w-full p-2 border rounded focus:outline-none transition ${
+        `w-full px-3 py-3 rounded-xl backdrop-blur-sm transition-all duration-300 border focus:outline-none focus:ring-2 ${
             hasError
-                ? "border-red-500 focus:ring-2 focus:ring-red-400"
-                : "border-gray-300 focus:ring-2 focus:ring-green-400"
+                ? "border-red-400 bg-red-50/50 focus:ring-red-200"
+                : "border-white/20 bg-white/60 hover:border-white/40 focus:border-emerald-300 focus:ring-emerald-200"
         }`;
+
+    const labelClass = "block text-sm font-semibold text-white mb-2 tracking-wide uppercase";
+
+    const handleChange = (field: keyof typeof form) =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+            setForm({ ...form, [field]: e.target.value });
+            if (errors[field]) setErrors({ ...errors, [field]: undefined });
+        };
+
+    const validate = (): FieldErrors => {
+        const newErrors: FieldErrors = {};
+
+        if (!form.username.trim() || form.username.trim().length < 3 || form.username.trim().length > 30)
+            newErrors.username = "Name: 3-30 chars";
+
+        if (!form.rating) newErrors.rating = "Rating required";
+        if (!form.gender) newErrors.gender = "Gender required";
+        if (!form.hand) newErrors.hand = "Hand required";
+        if (!form.courtSide) newErrors.courtSide = "Court side required";
+
+        if (form.playtomicProfileUrl.trim()) {
+            try { new URL(form.playtomicProfileUrl); }
+            catch { newErrors.playtomicProfileUrl = "Invalid URL"; }
+        }
+
+        return newErrors;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        const newErrors: FieldErrors = {};
-
-        if (!username.trim())
-            newErrors.username = "Name is required (3–30 characters)";
-        else if (username.trim().length < 3 || username.trim().length > 30)
-            newErrors.username = "Name must be between 3 and 30 characters";
-
-        if (!rating) newErrors.rating = "Rating is required";
-        if (!gender) newErrors.gender = "Gender is required";
-        if (!hand) newErrors.hand = "Dominant hand is required";
-        if (!courtSide) newErrors.courtSide = "Court side is required";
-
-        if (playtomicProfileUrl.trim()) {
-            try {
-                new URL(playtomicProfileUrl);
-            } catch {
-                newErrors.playtomicProfileUrl = "Invalid URL format";
-            }
-        }
-
+        const newErrors = validate();
         setErrors(newErrors);
+
         if (Object.keys(newErrors).length > 0) return;
 
         setSubmitting(true);
@@ -66,13 +82,13 @@ export function PlayerRegisterPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    username: username.trim(),
-                    rating,
-                    homeAddress: homeAddress.trim() || undefined,
-                    playtomicProfileUrl: playtomicProfileUrl.trim() || undefined,
-                    hand,
-                    courtSide,
-                    gender,
+                    username: form.username.trim(),
+                    rating: form.rating,
+                    homeAddress: form.homeAddress.trim() || undefined,
+                    playtomicProfileUrl: form.playtomicProfileUrl.trim() || undefined,
+                    gender: form.gender,
+                    hand: form.hand,
+                    courtSide: form.courtSide,
                 }),
             });
 
@@ -80,199 +96,135 @@ export function PlayerRegisterPage() {
 
             const player = await res.json();
             navigate(`/players/${player.id}`);
-        } catch (err) {
-            console.error(err);
-            setErrors({ form: "Failed to submit form. Please try again." });
+        } catch {
+            setErrors({ form: "Failed to submit" });
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div
-            className="min-h-screen flex items-center justify-center relative bg-cover bg-center"
-            style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}
-        >
-            <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div className="min-h-screen relative bg-cover bg-center bg-fixed"
+             style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-emerald-900/60"></div>
 
-            <form
-                onSubmit={handleSubmit}
-                className="relative z-10 w-full max-w-md bg-white bg-opacity-90 rounded-xl shadow p-6 space-y-4"
-            >
-                <h1 className="text-2xl font-bold text-gray-900 text-center">
-                    Register Player
-                </h1>
-
-                {errors.form && (
-                    <div className="text-red-600 text-sm text-center">
-                        {errors.form}
-                    </div>
-                )}
-
-                {/* Name */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={e => setUsername(e.target.value)}
-                        className={inputClass(!!errors.username)}
-                    />
-                    {errors.username && (
-                        <p className="text-sm text-red-600 mt-1">
-                            {errors.username}
-                        </p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                        Must be between 3 and 30 characters.
-                    </p>
-                </div>
-
-                {/* Rating Zone */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Rating <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={rating}
-                        onChange={e => setRating(e.target.value)}
-                        className={inputClass(!!errors.rating)}
-                    >
-                        <option value="">Select Rating</option>
-                        <option value="0.0">0.0</option>
-                        <option value="0.5">0.5</option>
-                        <option value="1.0">1.0</option>
-                        <option value="1.5">1.5</option>
-                        <option value="2.0">2.0</option>
-                        <option value="2.5">2.5</option>
-                        <option value="3.0">3.0</option>
-                        <option value="3.5">3.5</option>
-                        <option value="4.0">4.0</option>
-                        <option value="4.5">4.5</option>
-                        <option value="5.0">5.0</option>
-                        <option value="5.5">5.5</option>
-                        <option value="6.0">6.0</option>
-                        <option value="6.5">6.5</option>
-                        <option value="7.0">7.0</option>
-                    </select>
-                    {errors.rating && (
-                        <p className="text-sm text-red-600 mt-1">
-                            {errors.rating}
-                        </p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                        E.g. 3.18 = 3.0, 3.32 = 3.5, 3.88 = 4.0 etc.
-                    </p>
-                </div>
-
-                {/* City */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        City
-                    </label>
-                    <input
-                        type="text"
-                        value={homeAddress}
-                        onChange={e => setHomeAddress(e.target.value)}
-                        className={inputClass()}
-                    />
-                </div>
-
-                {/* Playtomic URL */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Playtomic Profile URL
-                    </label>
-                    <input
-                        type="url"
-                        value={playtomicProfileUrl}
-                        onChange={e => setPlaytomicProfileUrl(e.target.value)}
-                        className={inputClass(!!errors.playtomicProfileUrl)}
-                    />
-                    {errors.playtomicProfileUrl ? (
-                        <p className="text-sm text-red-600 mt-1">
-                            {errors.playtomicProfileUrl}
-                        </p>
-                    ) : (
-                        <p className="text-xs text-gray-500 mt-1">
-                            Optional — link to your Playtomic profile
-                        </p>
-                    )}
-                </div>
-
-                {/* Hand */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Dominant Hand <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={hand}
-                        onChange={e => setHand(e.target.value)}
-                        className={inputClass(!!errors.hand)}
-                    >
-                        <option value="">Select dominant hand</option>
-                        <option value="right">Right</option>
-                        <option value="left">Left</option>
-                    </select>
-                    {errors.hand && (
-                        <p className="text-sm text-red-600 mt-1">
-                            {errors.hand}
-                        </p>
-                    )}
-                </div>
-
-                {/* Court Side */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Preferred Court Side <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={courtSide}
-                        onChange={e => setCourtSide(e.target.value)}
-                        className={inputClass(!!errors.courtSide)}
-                    >
-                        <option value="">Select court side</option>
-                        <option value="right">Right</option>
-                        <option value="left">Left</option>
-                    </select>
-                    {errors.courtSide && (
-                        <p className="text-sm text-red-600 mt-1">
-                            {errors.courtSide}
-                        </p>
-                    )}
-                </div>
-
-                {/* Gender */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Gender <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        value={gender}
-                        onChange={e => setGender(e.target.value)}
-                        className={inputClass(!!errors.gender)}
-                    >
-                        <option value="">Select gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                    {errors.gender && (
-                        <p className="text-sm text-red-600 mt-1">
-                            {errors.gender}
-                        </p>
-                    )}
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold py-2 rounded transition"
+            <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
+                <form
+                    onSubmit={handleSubmit}
+                    className="w-full max-w-md backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8 space-y-5"
                 >
-                    {submitting ? "Submitting..." : "Register"}
-                </button>
-            </form>
+                    {/* Compact header */}
+                    <div className="text-center mb-6">
+                        <h1 className="text-3xl font-black bg-gradient-to-r from-white to-emerald-100/50 bg-clip-text text-transparent drop-shadow-xl mb-2">
+                            Register Player
+                        </h1>
+                    </div>
+
+                    {errors.form && (
+                        <div className="text-red-300 text-sm p-2.5 bg-red-900/20 backdrop-blur rounded-xl border border-red-500/30">
+                            {errors.form}
+                        </div>
+                    )}
+
+                    {/* Compact fields */}
+                    <div className="space-y-4">
+                        {/* Username */}
+                        <div>
+                            <label className={labelClass}>Name *</label>
+                            <input
+                                type="text"
+                                value={form.username}
+                                onChange={handleChange("username")}
+                                className={inputClass(!!errors.username)}
+                                placeholder="John Doe"
+                                maxLength={30}
+                            />
+                            {errors.username && <p className="text-red-300 text-xs mt-1.5">{errors.username}</p>}
+                        </div>
+
+                        {/* Rating */}
+                        <div>
+                            <label className={labelClass}>Rating *</label>
+                            <select
+                                value={form.rating}
+                                onChange={handleChange("rating")}
+                                className={inputClass(!!errors.rating)}
+                            >
+                                <option value="">Select</option>
+                                {RATING_OPTIONS.map(rating => (
+                                    <option key={rating} value={rating}>{rating}</option>
+                                ))}
+                            </select>
+                            {errors.rating && <p className="text-red-300 text-xs mt-1.5">{errors.rating}</p>}
+                        </div>
+
+                        {/* City */}
+                        <div>
+                            <label className={labelClass}>City</label>
+                            <input
+                                type="text"
+                                value={form.homeAddress}
+                                onChange={handleChange("homeAddress")}
+                                className={inputClass()}
+                                placeholder="Amsterdam"
+                            />
+                        </div>
+
+                        {/* Profile grid - 1 row mobile, 3col desktop */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className={labelClass}>Gender *</label>
+                                <select value={form.gender} onChange={handleChange("gender")} className={inputClass(!!errors.gender)}>
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                                {errors.gender && <p className="text-red-300 text-xs mt-1.5">{errors.gender}</p>}
+                            </div>
+                            <div>
+                                <label className={labelClass}>Hand *</label>
+                                <select value={form.hand} onChange={handleChange("hand")} className={inputClass(!!errors.hand)}>
+                                    <option value="">Select</option>
+                                    <option value="right">Right</option>
+                                    <option value="left">Left</option>
+                                </select>
+                                {errors.hand && <p className="text-red-300 text-xs mt-1.5">{errors.hand}</p>}
+                            </div>
+                            <div>
+                                <label className={labelClass}>Court *</label>
+                                <select value={form.courtSide} onChange={handleChange("courtSide")} className={inputClass(!!errors.courtSide)}>
+                                    <option value="">Select</option>
+                                    <option value="right">Right</option>
+                                    <option value="left">Left</option>
+                                </select>
+                                {errors.courtSide && <p className="text-red-300 text-xs mt-1.5">{errors.courtSide}</p>}
+                            </div>
+                        </div>
+
+                        {/* Playtomic */}
+                        <div>
+                            <label className={labelClass}>Playtomic URL</label>
+                            <input
+                                type="url"
+                                value={form.playtomicProfileUrl}
+                                onChange={handleChange("playtomicProfileUrl")}
+                                className={inputClass(!!errors.playtomicProfileUrl)}
+                                placeholder="playtomic.com/..."
+                            />
+                            {errors.playtomicProfileUrl && <p className="text-red-300 text-xs mt-1.5">{errors.playtomicProfileUrl}</p>}
+                        </div>
+                    </div>
+
+                    {/* Compact submit */}
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold text-lg py-4 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide"
+                    >
+                        {submitting ? "Creating..." : "Register Player"}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }
