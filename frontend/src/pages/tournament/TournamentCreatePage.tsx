@@ -41,38 +41,39 @@ export function TournamentCreatePage() {
     const [submitting, setSubmitting] = useState(false);
 
     const inputClass = (hasError?: boolean) =>
-        `w-full p-2 border rounded focus:outline-none transition ${
+        `w-full px-3 py-3 rounded-xl backdrop-blur-sm transition-all border focus:outline-none focus:ring-2 ${
             hasError
-                ? "border-red-500 focus:ring-2 focus:ring-red-400"
-                : "border-gray-300 focus:ring-2 focus:ring-green-400"
+                ? "border-red-400 bg-red-50/50 focus:ring-red-200"
+                : "border-white/20 bg-white/60 hover:border-white/40 focus:border-emerald-300 focus:ring-emerald-200"
         }`;
 
+    const labelClass = "block text-sm font-semibold text-white mb-2 tracking-wide uppercase";
+
     const handleChange = (field: keyof TournamentForm) =>
-        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
             setForm({ ...form, [field]: e.target.value });
+            if (errors[field]) setErrors({ ...errors, [field]: undefined });
+        };
 
     const validate = (): FieldErrors => {
         const newErrors: FieldErrors = {};
-        if (!form.name.trim()) newErrors.name = "Name is required";
-        if (!form.city.trim()) newErrors.city = "City is required";
-        if (!form.startDate.trim()) newErrors.startDate = "Start date is required";
-        if (!form.endDate.trim()) newErrors.endDate = "End date is required";
-        if (!form.minRating) newErrors.minRating = "Min rating is required";
-        if (!form.maxRating) newErrors.maxRating = "Max rating is required";
+        if (!form.name.trim()) newErrors.name = "Name required";
+        if (!form.city.trim()) newErrors.city = "City required";
+        if (!form.startDate) newErrors.startDate = "Start date required";
+        if (!form.endDate) newErrors.endDate = "End date required";
+        if (!form.minRating) newErrors.minRating = "Min rating required";
+        if (!form.maxRating) newErrors.maxRating = "Max rating required";
 
-        // Check minRating < maxRating
         if (form.minRating && form.maxRating) {
             const min = parseFloat(form.minRating);
             const max = parseFloat(form.maxRating);
-            if (min >= max) {
-                newErrors.maxRating = "Max rating must be higher than min rating";
-            }
+            if (min >= max) newErrors.maxRating = "Max > Min";
         }
 
         if (form.startDate && form.endDate) {
             const start = new Date(form.startDate);
             const end = new Date(form.endDate);
-            if (start >= end) newErrors.endDate = "End date must be after start date";
+            if (start >= end) newErrors.endDate = "End > Start";
         }
 
         return newErrors;
@@ -80,7 +81,6 @@ export function TournamentCreatePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         const newErrors = validate();
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
@@ -103,9 +103,6 @@ export function TournamentCreatePage() {
                 maxRating: form.maxRating,
             };
 
-            console.log("Payload:", JSON.stringify(payload, null, 2));  // ADD THIS LINE
-            console.log("minRating type:", typeof form.minRating, "value:", form.minRating);
-
             const res = await fetch("/api/tournaments", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -114,7 +111,7 @@ export function TournamentCreatePage() {
 
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}));
-                throw new Error(body.errors?.join(", ") || "Failed to create tournament");
+                throw new Error(body.errors?.join(", ") || "Failed to create");
             }
 
             const tournament = await res.json();
@@ -127,136 +124,144 @@ export function TournamentCreatePage() {
     };
 
     return (
-        <div
-            className="min-h-screen flex items-center justify-center relative bg-cover bg-center"
-            style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}
-        >
-            <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div className="min-h-screen relative bg-cover bg-center bg-fixed"
+             style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-emerald-900/60"></div>
 
-            <form
-                onSubmit={handleSubmit}
-                className="w-full max-w-md relative bg-white rounded-xl shadow p-6 space-y-4"
-            >
-                <h1 className="text-2xl font-bold text-center">New Tournament</h1>
-
-                {errors.form && <div className="text-red-600 text-sm text-center">{errors.form}</div>}
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={form.name}
-                        onChange={handleChange("name")}
-                        className={inputClass(!!errors.name)}
-                    />
-                    {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea
-                        value={form.description}
-                        onChange={handleChange("description")}
-                        className={inputClass()}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        City <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        value={form.city}
-                        onChange={handleChange("city")}
-                        className={inputClass(!!errors.city)}
-                    />
-                    {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Prizes</label>
-                    <input
-                        type="text"
-                        value={form.prizes}
-                        onChange={handleChange("prizes")}
-                        className={inputClass()}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Start Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="datetime-local"
-                        value={form.startDate}
-                        onChange={handleChange("startDate")}
-                        className={inputClass(!!errors.startDate)}
-                    />
-                    {errors.startDate && <p className="text-red-600 text-sm mt-1">{errors.startDate}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        End Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="datetime-local"
-                        value={form.endDate}
-                        onChange={handleChange("endDate")}
-                        className={inputClass(!!errors.endDate)}
-                    />
-                    {errors.endDate && <p className="text-red-600 text-sm mt-1">{errors.endDate}</p>}
-                </div>
-
-                {/* Min/Max Rating selects */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Min Rating <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={form.minRating || ""}  // Ensure empty string fallback
-                            onChange={handleChange("minRating")}
-                            className={inputClass(!!errors.minRating)}
-                        >
-                            <option value="">Select min rating...</option>
-                            {RATING_OPTIONS.map(rating => (
-                                <option key={rating} value={rating}>{rating}</option>  // ← Clean string values
-                            ))}
-                        </select>
-                        {errors.minRating && <p className="text-red-600 text-sm mt-1">{errors.minRating}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Max Rating <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={form.maxRating}
-                            onChange={handleChange("maxRating")}
-                            className={inputClass(!!errors.maxRating)}
-                        >
-                            <option value="">Select...</option>
-                            {RATING_OPTIONS.map(rating => (
-                                <option key={rating} value={rating}>{rating}</option>
-                            ))}
-                        </select>
-                        {errors.maxRating && <p className="text-red-600 text-sm mt-1">{errors.maxRating}</p>}
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold py-2 rounded transition"
+            <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
+                <form
+                    onSubmit={handleSubmit}
+                    className="w-full max-w-md backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8 space-y-4"
                 >
-                    {submitting ? "Creating..." : "Create Tournament"}
-                </button>
-            </form>
+                    {/* Compact header */}
+                    <div className="text-center mb-6">
+                        <h1 className="text-3xl font-black bg-gradient-to-r from-white to-emerald-100/50 bg-clip-text text-transparent drop-shadow-xl">
+                            New Tournament
+                        </h1>
+                    </div>
+
+                    {errors.form && (
+                        <div className="text-red-300 text-sm p-2 bg-red-900/20 backdrop-blur rounded-xl border border-red-500/30">
+                            {errors.form}
+                        </div>
+                    )}
+
+                    {/* Name */}
+                    <div>
+                        <label className={labelClass}>Name *</label>
+                        <input
+                            type="text"
+                            value={form.name}
+                            onChange={handleChange("name")}
+                            className={inputClass(!!errors.name)}
+                            placeholder="Summer Padel Cup"
+                        />
+                        {errors.name && <p className="text-red-300 text-xs mt-1.5">{errors.name}</p>}
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label className={labelClass}>Description</label>
+                        <textarea
+                            rows={2}
+                            value={form.description}
+                            onChange={handleChange("description")}
+                            className={inputClass()}
+                            placeholder="2x doubles tournament..."
+                        />
+                    </div>
+
+                    {/* City + Prizes */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>City *</label>
+                            <input
+                                type="text"
+                                value={form.city}
+                                onChange={handleChange("city")}
+                                className={inputClass(!!errors.city)}
+                                placeholder="Amsterdam"
+                            />
+                            {errors.city && <p className="text-red-300 text-xs mt-1.5">{errors.city}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Prizes</label>
+                            <input
+                                type="text"
+                                value={form.prizes}
+                                onChange={handleChange("prizes")}
+                                className={inputClass()}
+                                placeholder="€500 + racket"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>Start *</label>
+                            <input
+                                type="datetime-local"
+                                value={form.startDate}
+                                onChange={handleChange("startDate")}
+                                className={inputClass(!!errors.startDate)}
+                            />
+                            {errors.startDate && <p className="text-red-300 text-xs mt-1.5">{errors.startDate}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>End *</label>
+                            <input
+                                type="datetime-local"
+                                value={form.endDate}
+                                onChange={handleChange("endDate")}
+                                className={inputClass(!!errors.endDate)}
+                            />
+                            {errors.endDate && <p className="text-red-300 text-xs mt-1.5">{errors.endDate}</p>}
+                        </div>
+                    </div>
+
+                    {/* Rating Range */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>Min Rating *</label>
+                            <select
+                                value={form.minRating}
+                                onChange={handleChange("minRating")}
+                                className={inputClass(!!errors.minRating)}
+                            >
+                                <option value="">Select</option>
+                                {RATING_OPTIONS.map(rating => (
+                                    <option key={rating} value={rating}>{rating}</option>
+                                ))}
+                            </select>
+                            {errors.minRating && <p className="text-red-300 text-xs mt-1.5">{errors.minRating}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Max Rating *</label>
+                            <select
+                                value={form.maxRating}
+                                onChange={handleChange("maxRating")}
+                                className={inputClass(!!errors.maxRating)}
+                            >
+                                <option value="">Select</option>
+                                {RATING_OPTIONS.map(rating => (
+                                    <option key={rating} value={rating}>{rating}</option>
+                                ))}
+                            </select>
+                            {errors.maxRating && <p className="text-red-300 text-xs mt-1.5">{errors.maxRating}</p>}
+                        </div>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold text-lg py-4 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide"
+                    >
+                        {submitting ? "Creating..." : "Create Tournament"}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }

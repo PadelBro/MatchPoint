@@ -37,9 +37,7 @@ export function TournamentEditPage() {
 
         fetch(`/api/tournaments/${tournamentId}`)
             .then(res => {
-                if (!res.ok) {
-                    throw new Error("Tournament not found");
-                }
+                if (!res.ok) throw new Error("Tournament not found");
                 return res.json();
             })
             .then((t: Tournament) => {
@@ -61,42 +59,39 @@ export function TournamentEditPage() {
     }, [tournamentId]);
 
     const inputClass = (hasError?: boolean) =>
-        `w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+        `w-full px-3 py-3 rounded-xl backdrop-blur-sm transition-all border focus:outline-none focus:ring-2 ${
             hasError
-                ? "border-red-500 focus:ring-red-400 bg-red-50"
-                : "border-gray-300 focus:ring-blue-400 hover:border-blue-300"
+                ? "border-red-400 bg-red-50/50 focus:ring-red-200"
+                : "border-white/20 bg-white/60 hover:border-white/40 focus:border-emerald-300 focus:ring-emerald-200"
         }`;
+
+    const labelClass = "block text-sm font-semibold text-white mb-2 tracking-wide uppercase";
 
     const update = (key: keyof TournamentForm) =>
         (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
             setForm({ ...form!, [key]: e.target.value });
-            // Clear field error on change
-            if (errors[key]) {
-                setErrors({ ...errors, [key]: undefined });
-            }
+            if (errors[key]) setErrors({ ...errors, [key]: undefined });
         };
 
     const validate = (): FieldErrors => {
         const newErrors: FieldErrors = {};
-        if (!form?.name.trim()) newErrors.name = "Name is required";
-        if (!form?.city.trim()) newErrors.city = "City is required";
-        if (!form?.startDate) newErrors.startDate = "Start date is required";
-        if (!form?.endDate) newErrors.endDate = "End date is required";
+        if (!form?.name.trim()) newErrors.name = "Name required";
+        if (!form?.city.trim()) newErrors.city = "City required";
+        if (!form?.startDate) newErrors.startDate = "Start required";
+        if (!form?.endDate) newErrors.endDate = "End required";
         if (!form?.minRating) newErrors.minRating = "Min rating required";
         if (!form?.maxRating) newErrors.maxRating = "Max rating required";
 
-        // Min < Max rating validation
         if (form?.minRating && form?.maxRating) {
             const min = parseFloat(form.minRating);
             const max = parseFloat(form.maxRating);
-            if (min >= max) newErrors.maxRating = "Max must be higher than min";
+            if (min >= max) newErrors.maxRating = "Max > Min";
         }
 
-        // Date validation
         if (form?.startDate && form?.endDate) {
             const start = new Date(form.startDate);
             const end = new Date(form.endDate);
-            if (start >= end) newErrors.endDate = "End date must be after start date";
+            if (start >= end) newErrors.endDate = "End > Start";
         }
 
         return newErrors;
@@ -113,8 +108,8 @@ export function TournamentEditPage() {
         setError(null);
 
         try {
-            const res = await fetch(`/api/tournaments/`, {
-                method: "POST",  // Changed from POST
+            const res = await fetch(`/api/tournaments`, {
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     id: tournamentId,
@@ -125,8 +120,8 @@ export function TournamentEditPage() {
                     startDate: new Date(form.startDate).toISOString(),
                     endDate: new Date(form.endDate).toISOString(),
                     status: form.status,
-                    minRating: form.minRating,     // ✅ New fields
-                    maxRating: form.maxRating,     // ✅ New fields
+                    minRating: form.minRating,
+                    maxRating: form.maxRating,
                     organizerIds: form.organizerIds,
                 }),
             });
@@ -161,156 +156,150 @@ export function TournamentEditPage() {
     }
 
     return (
-        <div
-            className="min-h-screen flex items-center justify-center relative bg-cover bg-center"
-            style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}
-        >
-            <div className="absolute inset-0 bg-black bg-opacity-50" />
+        <div className="min-h-screen relative bg-cover bg-center bg-fixed"
+             style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
+            <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-emerald-900/60"></div>
 
-            <div className="relative z-10 bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 space-y-6">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Tournament</h1>
-                    <p className="text-gray-600">Update tournament details</p>
-                </div>
+            <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
+                <div className="w-full max-w-xl backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8 space-y-5">
 
-                {error && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm">
-                        {error}
+                    {/* Compact header */}
+                    <div className="text-center mb-6 pb-4 border-b border-white/20">
+                        <h1 className="text-3xl font-black bg-gradient-to-r from-white to-emerald-100/50 bg-clip-text text-transparent drop-shadow-xl">
+                            Edit Tournament
+                        </h1>
                     </div>
-                )}
 
-                {/* Name */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tournament Name *
-                    </label>
-                    <input
-                        className={inputClass(!!errors.name)}
-                        value={form.name}
-                        onChange={update("name")}
-                        placeholder="Enter tournament name"
-                    />
-                    {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
-                </div>
+                    {error && (
+                        <div className="text-red-300 text-sm p-2.5 bg-red-900/20 backdrop-blur rounded-xl border border-red-500/30">
+                            {error}
+                        </div>
+                    )}
 
-                {/* Description */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <textarea
-                        rows={3}
-                        className={inputClass()}
-                        value={form.description}
-                        onChange={update("description")}
-                        placeholder="Optional tournament description"
-                    />
-                </div>
-
-                {/* City */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        City *
-                    </label>
-                    <input
-                        className={inputClass(!!errors.city)}
-                        value={form.city}
-                        onChange={update("city")}
-                        placeholder="e.g. Amsterdam"
-                    />
-                    {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
-                </div>
-
-                {/* Prizes */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Prizes</label>
-                    <input
-                        className={inputClass()}
-                        value={form.prizes}
-                        onChange={update("prizes")}
-                        placeholder="e.g. €500 + racket"
-                    />
-                </div>
-
-                {/* Dates */}
-                <div className="grid grid-cols-2 gap-4">
+                    {/* Name */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Start Date *
-                        </label>
+                        <label className={labelClass}>Name *</label>
                         <input
-                            type="datetime-local"
-                            className={inputClass(!!errors.startDate)}
-                            value={form.startDate}
-                            onChange={update("startDate")}
+                            type="text"
+                            value={form.name}
+                            onChange={update("name")}
+                            className={inputClass(!!errors.name)}
+                            placeholder="Summer Padel Cup"
                         />
-                        {errors.startDate && <p className="text-red-600 text-sm mt-1">{errors.startDate}</p>}
+                        {errors.name && <p className="text-red-300 text-xs mt-1.5">{errors.name}</p>}
                     </div>
+
+                    {/* Description */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            End Date *
-                        </label>
-                        <input
-                            type="datetime-local"
-                            className={inputClass(!!errors.endDate)}
-                            value={form.endDate}
-                            onChange={update("endDate")}
+                        <label className={labelClass}>Description</label>
+                        <textarea
+                            rows={2}
+                            value={form.description}
+                            onChange={update("description")}
+                            className={inputClass()}
+                            placeholder="Tournament details..."
                         />
-                        {errors.endDate && <p className="text-red-600 text-sm mt-1">{errors.endDate}</p>}
                     </div>
-                </div>
 
-                {/* Rating Range */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Min Rating *
-                        </label>
-                        <select
-                            className={inputClass(!!errors.minRating)}
-                            value={form.minRating}
-                            onChange={update("minRating")}
-                        >
-                            <option value="">Select...</option>
-                            {RATING_OPTIONS.map(rating => (
-                                <option key={rating} value={rating}>{rating}</option>
-                            ))}
-                        </select>
-                        {errors.minRating && <p className="text-red-600 text-sm mt-1">{errors.minRating}</p>}
+                    {/* City + Prizes */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>City *</label>
+                            <input
+                                type="text"
+                                value={form.city}
+                                onChange={update("city")}
+                                className={inputClass(!!errors.city)}
+                                placeholder="Amsterdam"
+                            />
+                            {errors.city && <p className="text-red-300 text-xs mt-1.5">{errors.city}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Prizes</label>
+                            <input
+                                type="text"
+                                value={form.prizes}
+                                onChange={update("prizes")}
+                                className={inputClass()}
+                                placeholder="€500 + racket"
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Max Rating *
-                        </label>
-                        <select
-                            className={inputClass(!!errors.maxRating)}
-                            value={form.maxRating}
-                            onChange={update("maxRating")}
-                        >
-                            <option value="">Select...</option>
-                            {RATING_OPTIONS.map(rating => (
-                                <option key={rating} value={rating}>{rating}</option>
-                            ))}
-                        </select>
-                        {errors.maxRating && <p className="text-red-600 text-sm mt-1">{errors.maxRating}</p>}
-                    </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex gap-3 pt-4">
-                    <button
-                        type="button"
-                        onClick={() => navigate(`/tournaments/${tournamentId}`)}
-                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200"
-                        disabled={saving}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        disabled={saving}
-                        onClick={submit}
-                        className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
-                    >
-                        {saving ? "Saving..." : "Save Changes"}
-                    </button>
+                    {/* Dates */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>Start *</label>
+                            <input
+                                type="datetime-local"
+                                value={form.startDate}
+                                onChange={update("startDate")}
+                                className={inputClass(!!errors.startDate)}
+                            />
+                            {errors.startDate && <p className="text-red-300 text-xs mt-1.5">{errors.startDate}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>End *</label>
+                            <input
+                                type="datetime-local"
+                                value={form.endDate}
+                                onChange={update("endDate")}
+                                className={inputClass(!!errors.endDate)}
+                            />
+                            {errors.endDate && <p className="text-red-300 text-xs mt-1.5">{errors.endDate}</p>}
+                        </div>
+                    </div>
+
+                    {/* Rating Range */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>Min Rating *</label>
+                            <select
+                                value={form.minRating}
+                                onChange={update("minRating")}
+                                className={inputClass(!!errors.minRating)}
+                            >
+                                <option value="">Select</option>
+                                {RATING_OPTIONS.map(rating => (
+                                    <option key={rating} value={rating}>{rating}</option>
+                                ))}
+                            </select>
+                            {errors.minRating && <p className="text-red-300 text-xs mt-1.5">{errors.minRating}</p>}
+                        </div>
+                        <div>
+                            <label className={labelClass}>Max Rating *</label>
+                            <select
+                                value={form.maxRating}
+                                onChange={update("maxRating")}
+                                className={inputClass(!!errors.maxRating)}
+                            >
+                                <option value="">Select</option>
+                                {RATING_OPTIONS.map(rating => (
+                                    <option key={rating} value={rating}>{rating}</option>
+                                ))}
+                            </select>
+                            {errors.maxRating && <p className="text-red-300 text-xs mt-1.5">{errors.maxRating}</p>}
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/tournaments/${tournamentId}`)}
+                            className="flex-1 px-6 py-3 bg-white/20 backdrop-blur text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl disabled:opacity-50"
+                            disabled={saving}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            disabled={saving}
+                            onClick={submit}
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 disabled:opacity-50"
+                        >
+                            {saving ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
