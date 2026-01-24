@@ -11,7 +11,7 @@ export default function App() {
         <div className="min-h-screen bg-gray-100">
             <Routes>
                 <Route path="/" element={<MainPage />} />
-                <Route path="/register" element={<PlayerRegisterPage />} />
+                <Route path="/players/register" element={<PlayerRegisterPage />} />
                 <Route path="/players/:playerId" element={<PlayerPage />} />
                 <Route path="/tournaments/new" element={<TournamentCreatePage />} />
                 <Route path="/tournaments/:tournamentId" element={<TournamentPage />} />

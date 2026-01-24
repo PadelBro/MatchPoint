@@ -47,11 +47,11 @@ class TournamentRepository(
       """
         |INSERT INTO tournament (
         |  id, name, description, city, prizes, start_date, end_date, status,
-        |  organizer_ids, rating_zones
+        |  organizer_ids, min_rating, max_rating
         |)
         |VALUES (
         |  :id, :name, :description, :city, :prizes, :startDate, :endDate, :status,
-        |  :organizerIds::jsonb, :ratingZones::jsonb
+        |  :organizerIds::jsonb, :min_rating, :max_rating
         |)
         |ON CONFLICT (id) DO UPDATE SET
         |  name = EXCLUDED.name,
@@ -62,7 +62,8 @@ class TournamentRepository(
         |  end_date = EXCLUDED.end_date,
         |  status = EXCLUDED.status,
         |  organizer_ids = EXCLUDED.organizer_ids,
-        |  rating_zones = EXCLUDED.rating_zones,
+        |  min_rating = EXCLUDED.min_rating,
+        |  max_rating = EXCLUDED.max_rating,
         |  updated_at = extract(epoch from now()) * 1000
         |RETURNING *
         |""".stripMargin,
@@ -76,7 +77,8 @@ class TournamentRepository(
         "endDate" -> tournament.getEndDate,
         "status" -> tournament.getStatus.value,
         "organizerIds" -> mapper.writeValueAsString(tournament.getOrganizerIds),
-        "ratingZones" -> mapper.writeValueAsString(tournament.getRatingZones)
+        "min_rating" -> tournament.getMinRating.value,
+        "max_rating" -> tournament.getMaxRating.value
       )
     )
   }

@@ -10,16 +10,15 @@ interface TournamentForm {
     endDate: string;
     organizerIds: string[];
     status: "pending" | "active" | "completed";
-    ratingZones: string[];
+    minRating: string;
+    maxRating: string;
 }
 
 type FieldErrors = Partial<Record<keyof TournamentForm | "form", string>>;
 
-// Available rating zones
-const RATING_ZONES = [
-    "0.0-0.5","0.5-1.0","1.0-1.5","1.5-2.0","2.0-2.5","2.5-3.0",
-    "3.0-3.5","3.5-4.0","4.0-4.5","4.5-5.0","5.0-5.5","5.5-6.0",
-    "6.0-6.5","6.5-7.0"
+const RATING_OPTIONS = [
+    "0.0", "0.5", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5",
+    "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"
 ];
 
 export function TournamentCreatePage() {
@@ -34,7 +33,8 @@ export function TournamentCreatePage() {
         endDate: "",
         organizerIds: ["6cf40eff-f53f-4766-bae8-340c2eb72042"],
         status: "pending",
-        ratingZones: [],
+        minRating: "",
+        maxRating: "",
     });
 
     const [errors, setErrors] = useState<FieldErrors>({});
@@ -48,13 +48,8 @@ export function TournamentCreatePage() {
         }`;
 
     const handleChange = (field: keyof TournamentForm) =>
-        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
             setForm({ ...form, [field]: e.target.value });
-
-    const handleRatingZonesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selected = Array.from(e.target.selectedOptions, opt => opt.value);
-        setForm({ ...form, ratingZones: selected });
-    };
 
     const validate = (): FieldErrors => {
         const newErrors: FieldErrors = {};
@@ -62,7 +57,17 @@ export function TournamentCreatePage() {
         if (!form.city.trim()) newErrors.city = "City is required";
         if (!form.startDate.trim()) newErrors.startDate = "Start date is required";
         if (!form.endDate.trim()) newErrors.endDate = "End date is required";
-        if (form.ratingZones.length === 0) newErrors.ratingZones = "Select at least one rating zone";
+        if (!form.minRating) newErrors.minRating = "Min rating is required";
+        if (!form.maxRating) newErrors.maxRating = "Max rating is required";
+
+        // Check minRating < maxRating
+        if (form.minRating && form.maxRating) {
+            const min = parseFloat(form.minRating);
+            const max = parseFloat(form.maxRating);
+            if (min >= max) {
+                newErrors.maxRating = "Max rating must be higher than min rating";
+            }
+        }
 
         if (form.startDate && form.endDate) {
             const start = new Date(form.startDate);
@@ -85,15 +90,21 @@ export function TournamentCreatePage() {
         try {
             const toIsoUtc = (dateStr: string) => new Date(dateStr).toISOString();
 
-            const payload: TournamentForm = {
-                ...form,
+            const payload = {
                 name: form.name.trim(),
                 description: form.description.trim() || undefined,
                 city: form.city.trim(),
                 prizes: form.prizes.trim() || undefined,
                 startDate: toIsoUtc(form.startDate),
                 endDate: toIsoUtc(form.endDate),
+                organizerIds: form.organizerIds,
+                status: form.status,
+                minRating: form.minRating,
+                maxRating: form.maxRating,
             };
+
+            console.log("Payload:", JSON.stringify(payload, null, 2));  // ADD THIS LINE
+            console.log("minRating type:", typeof form.minRating, "value:", form.minRating);
 
             const res = await fetch("/api/tournaments", {
                 method: "POST",
@@ -121,7 +132,6 @@ export function TournamentCreatePage() {
             style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}
         >
             <div className="absolute inset-0 bg-black bg-opacity-50" />
-
 
             <form
                 onSubmit={handleSubmit}
@@ -202,23 +212,41 @@ export function TournamentCreatePage() {
                     {errors.endDate && <p className="text-red-600 text-sm mt-1">{errors.endDate}</p>}
                 </div>
 
-                {/* Multi-select for rating zones */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Rating Zones <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        multiple
-                        value={form.ratingZones}
-                        onChange={handleRatingZonesChange}
-                        className={inputClass(!!errors.ratingZones)}
-                        size={6}
-                    >
-                        {RATING_ZONES.map(zone => (
-                            <option key={zone} value={zone}>{zone}</option>
-                        ))}
-                    </select>
-                    {errors.ratingZones && <p className="text-red-600 text-sm mt-1">{errors.ratingZones}</p>}
+                {/* Min/Max Rating selects */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Min Rating <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={form.minRating || ""}  // Ensure empty string fallback
+                            onChange={handleChange("minRating")}
+                            className={inputClass(!!errors.minRating)}
+                        >
+                            <option value="">Select min rating...</option>
+                            {RATING_OPTIONS.map(rating => (
+                                <option key={rating} value={rating}>{rating}</option>  // ← Clean string values
+                            ))}
+                        </select>
+                        {errors.minRating && <p className="text-red-600 text-sm mt-1">{errors.minRating}</p>}
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Max Rating <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={form.maxRating}
+                            onChange={handleChange("maxRating")}
+                            className={inputClass(!!errors.maxRating)}
+                        >
+                            <option value="">Select...</option>
+                            {RATING_OPTIONS.map(rating => (
+                                <option key={rating} value={rating}>{rating}</option>
+                            ))}
+                        </select>
+                        {errors.maxRating && <p className="text-red-600 text-sm mt-1">{errors.maxRating}</p>}
+                    </div>
                 </div>
 
                 <button

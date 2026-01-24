@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
-import models.player.internal.RatingZone;
+import models.player.internal.Rating;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,7 +39,10 @@ public class Tournament {
     TournamentStatus status;
 
     @NonNull
-    List<RatingZone> ratingZones;
+    Rating minRating;
+
+    @NonNull
+    Rating maxRating;
 
     Long createdAt;
 

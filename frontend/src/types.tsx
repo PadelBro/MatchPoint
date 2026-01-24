@@ -4,7 +4,7 @@ export type Side = "LEFT" | "RIGHT";
 export interface Player {
   id: string;
   username: string;
-  ratingZone: string;
+  rating: string;
   homeAddress: string;
   gender: Gender;
   hand: Side;
@@ -22,5 +22,6 @@ export interface Tournament {
   endDate: number;   // epoch millis
   organizerIds: string[];
   status: "PENDING" | "ACTIVE" | "COMPLETED";
-  ratingZones: string[];
+  minRating: string;
+  maxRating: string;
 }
