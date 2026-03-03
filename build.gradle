@@ -47,6 +47,13 @@ dependencies {
     compileOnly "org.projectlombok:lombok:1.18.36"
     annotationProcessor "org.projectlombok:lombok:1.18.36"
 
+    // Test
+    testImplementation "org.scalatest:scalatest_$scalaBinaryVersion:3.2.19"
+    testImplementation "org.scalatestplus:junit-5-11_$scalaBinaryVersion:3.2.19.0"
+    testImplementation "org.mockito:mockito-core:5.12.0"
+    testCompileOnly "org.projectlombok:lombok:1.18.36"
+    testAnnotationProcessor "org.projectlombok:lombok:1.18.36"
+
     // Akka core
     implementation "com.typesafe.akka:akka-actor-typed_$scalaBinaryVersion:$akkaVersion"
     implementation "com.typesafe.akka:akka-stream_2.13:$akkaVersion"
@@ -55,6 +62,14 @@ dependencies {
 
     // Akka HTTP
     implementation "com.typesafe.akka:akka-http-core_2.13:$akkaHttpVersion"
+}
+
+sourceSets {
+    test {
+        scala {
+            srcDirs = ['src/test/scala']
+        }
+    }
 }
 
 test {

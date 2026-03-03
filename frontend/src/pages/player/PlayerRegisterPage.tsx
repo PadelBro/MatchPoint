@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 
 type FieldErrors = Partial<Record<
     | "username"
@@ -12,11 +13,6 @@ type FieldErrors = Partial<Record<
     | "form",
     string
 >>;
-
-const RATING_OPTIONS = [
-    "0.0", "0.5", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5",
-    "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"
-];
 
 export function PlayerRegisterPage() {
     const navigate = useNavigate();
@@ -152,7 +148,7 @@ export function PlayerRegisterPage() {
                             >
                                 <option value="">Select</option>
                                 {RATING_OPTIONS.map(rating => (
-                                    <option key={rating} value={rating}>{rating}</option>
+                                    <option key={rating} value={rating}>{rating.toFixed(1)}</option>
                                 ))}
                             </select>
                             {errors.rating && <p className="text-red-300 text-xs mt-1.5">{errors.rating}</p>}

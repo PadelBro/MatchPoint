@@ -1,0 +1,6 @@
+ALTER TABLE tournament
+    ALTER COLUMN min_rating TYPE NUMERIC USING min_rating::NUMERIC,
+    ALTER COLUMN max_rating TYPE NUMERIC USING max_rating::NUMERIC;
+
+ALTER TABLE player
+    ALTER COLUMN rating TYPE NUMERIC USING rating::NUMERIC;

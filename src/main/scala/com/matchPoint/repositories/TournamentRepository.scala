@@ -3,7 +3,8 @@ package com.matchPoint.repositories
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.matchPoint.helpers.JdbcWrapperTrait
 import models.general.JacksonRowMapper
-import models.tournament.internal.Tournament
+import models.player.internal.Rating
+import models.tournament.internal.{Tournament, TournamentStatus}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
@@ -39,6 +40,49 @@ class TournamentRepository(
         |ORDER BY start_date ASC
         |""".stripMargin,
       Map("organizerId" -> s"""["$organizerId"]""")
+    )
+  }
+
+  def find(
+    city: Option[String],
+    startDate: Option[Long],
+    endDate: Option[Long],
+    status: Option[TournamentStatus],
+    minRating: Option[Rating],
+    maxRating: Option[Rating],
+    offset: Option[Int],
+    limit: Option[Int]
+  ): Future[List[Tournament]] = {
+    val conditions = Seq(
+      city.filter(_.nonEmpty).map(_ => "city ILIKE :city"),
+      startDate.map(_ => "start_date >= :startDate"),
+      endDate.map(_ => "end_date <= :endDate"),
+      status.map(_ => "status = :status"),
+      minRating.map(_ => "min_rating >= :minRating"),
+      maxRating.map(_ => "max_rating <= :maxRating")
+    ).flatten
+    val whereClause = if (conditions.nonEmpty) "AND " + conditions.mkString(" AND ") else ""
+
+    val sql =
+      s"""
+         |SELECT * FROM tournament
+         |WHERE 1 = 1
+         |$whereClause
+         |ORDER BY start_date ASC
+         |LIMIT :limit OFFSET :offset
+      """.stripMargin
+
+    jdbcTemplate.queryList[Tournament](sql,
+      Map(
+        "city"       -> city.orNull,
+        "startDate"  -> startDate.map(Long.box).orNull,
+        "endDate"    -> endDate.map(Long.box).orNull,
+        "status"     -> status.map(_.value).orNull,
+        "minRating"  -> minRating.map(r => Float.box(r.value)).orNull,
+        "maxRating"  -> maxRating.map(r => Float.box(r.value)).orNull,
+        "offset"     -> (offset.getOrElse(0) * limit.getOrElse(25)),
+        "limit"      -> limit.getOrElse(25)
+      )
     )
   }
 

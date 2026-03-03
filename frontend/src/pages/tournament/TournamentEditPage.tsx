@@ -1,32 +1,15 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Tournament } from "../types";
+import {Tournament} from "../../model/tournament/Tournament";
+import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 
-interface TournamentForm {
-    name: string;
-    description: string;
-    city: string;
-    prizes: string;
-    startDate: string;
-    endDate: string;
-    organizerIds: string[];
-    status: "pending" | "active" | "completed";
-    minRating: string;
-    maxRating: string;
-}
-
-type FieldErrors = Partial<Record<keyof TournamentForm, string>>;
-
-const RATING_OPTIONS = [
-    "0.0", "0.5", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5",
-    "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"
-];
+type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'>, string>>;
 
 export function TournamentEditPage() {
     const { tournamentId } = useParams<{ tournamentId: string }>();
     const navigate = useNavigate();
 
-    const [form, setForm] = useState<TournamentForm | null>(null);
+    const [form, setForm] = useState<Omit<Tournament, 'id'> | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -35,27 +18,29 @@ export function TournamentEditPage() {
     useEffect(() => {
         if (!tournamentId) return;
 
-        fetch(`/api/tournaments/${tournamentId}`)
-            .then(res => {
+        (async () => {
+            try {
+                const res = await fetch(`/api/tournaments/${tournamentId}`);
                 if (!res.ok) throw new Error("Tournament not found");
-                return res.json();
-            })
-            .then((t: Tournament) => {
+                const t: Tournament = await res.json();
                 setForm({
                     name: t.name,
                     description: t.description ?? "",
                     city: t.city,
                     prizes: t.prizes ?? "",
-                    startDate: new Date(t.startDate).toISOString().slice(0, 16),
-                    endDate: new Date(t.endDate).toISOString().slice(0, 16),
+                    startDate: t.startDate,
+                    endDate: t.endDate,
                     organizerIds: t.organizerIds,
                     status: t.status,
-                    minRating: t.minRating || "",
-                    maxRating: t.maxRating || "",
+                    minRating: t.minRating,
+                    maxRating: t.maxRating,
                 });
-            })
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+            } catch (err: any) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, [tournamentId]);
 
     const inputClass = (hasError?: boolean) =>
@@ -67,9 +52,21 @@ export function TournamentEditPage() {
 
     const labelClass = "block text-sm font-semibold text-white mb-2 tracking-wide uppercase";
 
-    const update = (key: keyof TournamentForm) =>
-        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const update = (key: 'name' | 'description' | 'city' | 'prizes') =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             setForm({ ...form!, [key]: e.target.value });
+            if (errors[key]) setErrors({ ...errors, [key]: undefined });
+        };
+
+    const updateDate = (key: 'startDate' | 'endDate') =>
+        (e: React.ChangeEvent<HTMLInputElement>) => {
+            setForm({ ...form!, [key]: e.target.value ? new Date(e.target.value).getTime() : NaN });
+            if (errors[key]) setErrors({ ...errors, [key]: undefined });
+        };
+
+    const updateRating = (key: 'minRating' | 'maxRating') =>
+        (e: React.ChangeEvent<HTMLSelectElement>) => {
+            setForm({ ...form!, [key]: e.target.value !== "" ? Number(e.target.value) : NaN });
             if (errors[key]) setErrors({ ...errors, [key]: undefined });
         };
 
@@ -77,21 +74,17 @@ export function TournamentEditPage() {
         const newErrors: FieldErrors = {};
         if (!form?.name.trim()) newErrors.name = "Name required";
         if (!form?.city.trim()) newErrors.city = "City required";
-        if (!form?.startDate) newErrors.startDate = "Start required";
-        if (!form?.endDate) newErrors.endDate = "End required";
-        if (!form?.minRating) newErrors.minRating = "Min rating required";
-        if (!form?.maxRating) newErrors.maxRating = "Max rating required";
+        if (!form?.startDate || isNaN(form.startDate)) newErrors.startDate = "Start required";
+        if (!form?.endDate || isNaN(form.endDate)) newErrors.endDate = "End required";
+        if (form?.minRating == null || isNaN(form.minRating)) newErrors.minRating = "Min rating required";
+        if (form?.maxRating == null || isNaN(form.maxRating)) newErrors.maxRating = "Max rating required";
 
-        if (form?.minRating && form?.maxRating) {
-            const min = parseFloat(form.minRating);
-            const max = parseFloat(form.maxRating);
-            if (min >= max) newErrors.maxRating = "Max > Min";
+        if (form?.minRating != null && !isNaN(form.minRating) && form?.maxRating != null && !isNaN(form.maxRating)) {
+            if (form.minRating >= form.maxRating) newErrors.maxRating = "Max > Min";
         }
 
         if (form?.startDate && form?.endDate) {
-            const start = new Date(form.startDate);
-            const end = new Date(form.endDate);
-            if (start >= end) newErrors.endDate = "End > Start";
+            if (form.startDate >= form.endDate) newErrors.endDate = "End > Start";
         }
 
         return newErrors;
@@ -114,11 +107,11 @@ export function TournamentEditPage() {
                 body: JSON.stringify({
                     id: tournamentId,
                     name: form.name.trim(),
-                    description: form.description.trim() || undefined,
+                    description: form.description?.trim() || undefined,
                     city: form.city.trim(),
-                    prizes: form.prizes.trim() || undefined,
-                    startDate: new Date(form.startDate).toISOString(),
-                    endDate: new Date(form.endDate).toISOString(),
+                    prizes: form.prizes?.trim() || undefined,
+                    startDate: form.startDate,
+                    endDate: form.endDate,
                     status: form.status,
                     minRating: form.minRating,
                     maxRating: form.maxRating,
@@ -163,7 +156,6 @@ export function TournamentEditPage() {
             <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
                 <div className="w-full max-w-xl backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8 space-y-5">
 
-                    {/* Compact header */}
                     <div className="text-center mb-6 pb-4 border-b border-white/20">
                         <h1 className="text-3xl font-black bg-gradient-to-r from-white to-emerald-100/50 bg-clip-text text-transparent drop-shadow-xl">
                             Edit Tournament
@@ -194,7 +186,7 @@ export function TournamentEditPage() {
                         <label className={labelClass}>Description</label>
                         <textarea
                             rows={2}
-                            value={form.description}
+                            value={form.description ?? ""}
                             onChange={update("description")}
                             className={inputClass()}
                             placeholder="Tournament details..."
@@ -218,7 +210,7 @@ export function TournamentEditPage() {
                             <label className={labelClass}>Prizes</label>
                             <input
                                 type="text"
-                                value={form.prizes}
+                                value={form.prizes ?? ""}
                                 onChange={update("prizes")}
                                 className={inputClass()}
                                 placeholder="€500 + racket"
@@ -232,8 +224,8 @@ export function TournamentEditPage() {
                             <label className={labelClass}>Start *</label>
                             <input
                                 type="datetime-local"
-                                value={form.startDate}
-                                onChange={update("startDate")}
+                                value={form.startDate && !isNaN(form.startDate) ? new Date(form.startDate).toISOString().slice(0, 16) : ""}
+                                onChange={updateDate("startDate")}
                                 className={inputClass(!!errors.startDate)}
                             />
                             {errors.startDate && <p className="text-red-300 text-xs mt-1.5">{errors.startDate}</p>}
@@ -242,8 +234,8 @@ export function TournamentEditPage() {
                             <label className={labelClass}>End *</label>
                             <input
                                 type="datetime-local"
-                                value={form.endDate}
-                                onChange={update("endDate")}
+                                value={form.endDate && !isNaN(form.endDate) ? new Date(form.endDate).toISOString().slice(0, 16) : ""}
+                                onChange={updateDate("endDate")}
                                 className={inputClass(!!errors.endDate)}
                             />
                             {errors.endDate && <p className="text-red-300 text-xs mt-1.5">{errors.endDate}</p>}
@@ -255,13 +247,13 @@ export function TournamentEditPage() {
                         <div>
                             <label className={labelClass}>Min Rating *</label>
                             <select
-                                value={form.minRating}
-                                onChange={update("minRating")}
+                                value={form.minRating != null && !isNaN(form.minRating) ? form.minRating : ""}
+                                onChange={updateRating("minRating")}
                                 className={inputClass(!!errors.minRating)}
                             >
                                 <option value="">Select</option>
                                 {RATING_OPTIONS.map(rating => (
-                                    <option key={rating} value={rating}>{rating}</option>
+                                    <option key={rating} value={rating}>{rating.toFixed(1)}</option>
                                 ))}
                             </select>
                             {errors.minRating && <p className="text-red-300 text-xs mt-1.5">{errors.minRating}</p>}
@@ -269,13 +261,13 @@ export function TournamentEditPage() {
                         <div>
                             <label className={labelClass}>Max Rating *</label>
                             <select
-                                value={form.maxRating}
-                                onChange={update("maxRating")}
+                                value={form.maxRating != null && !isNaN(form.maxRating) ? form.maxRating : ""}
+                                onChange={updateRating("maxRating")}
                                 className={inputClass(!!errors.maxRating)}
                             >
                                 <option value="">Select</option>
                                 {RATING_OPTIONS.map(rating => (
-                                    <option key={rating} value={rating}>{rating}</option>
+                                    <option key={rating} value={rating}>{rating.toFixed(1)}</option>
                                 ))}
                             </select>
                             {errors.maxRating && <p className="text-red-300 text-xs mt-1.5">{errors.maxRating}</p>}
