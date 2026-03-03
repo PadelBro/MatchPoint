@@ -29,10 +29,10 @@ public class UpsertTournamentRequest {
     String prizes;
 
     @NonNull
-    Instant startDate;
+    Long startDate;
 
     @NonNull
-    Instant endDate;
+    Long endDate;
 
     @NonNull
     List<UUID> organizerIds;

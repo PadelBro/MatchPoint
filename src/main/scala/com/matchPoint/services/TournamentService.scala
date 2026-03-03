@@ -2,7 +2,7 @@ package com.matchPoint.services
 
 import com.matchPoint.repositories.TournamentRepository
 import models.player.internal.Rating
-import models.tournament.external.UpsertTournamentRequest
+import models.tournament.external.{FilterTournamentsRequest, UpsertTournamentRequest}
 import models.tournament.internal.Tournament
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,7 +32,7 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
   }
 
   private def validate(tournamentRequest: UpsertTournamentRequest): Unit = {
-    if (tournamentRequest.getStartDate.isAfter(tournamentRequest.getEndDate))
+    if (tournamentRequest.getStartDate >= tournamentRequest.getEndDate)
       throw new IllegalArgumentException("Start date must be before end date")
 
     if (tournamentRequest.getOrganizerIds.isEmpty)
@@ -47,8 +47,8 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
       .description(tournamentRequest.getDescription)
       .city(tournamentRequest.getCity)
       .prizes(tournamentRequest.getPrizes)
-      .startDate(tournamentRequest.getStartDate.toEpochMilli)
-      .endDate(tournamentRequest.getEndDate.toEpochMilli)
+      .startDate(tournamentRequest.getStartDate)
+      .endDate(tournamentRequest.getEndDate)
       .organizerIds(tournamentRequest.getOrganizerIds)
       .status(tournamentRequest.getStatus)
       .minRating(tournamentRequest.getMinRating)
@@ -56,6 +56,19 @@ class TournamentService(tournamentRepo: TournamentRepository)(implicit ec: Execu
       .build()
   }
 
+
+  def filter(request: FilterTournamentsRequest): Future[List[Tournament]] = {
+    tournamentRepo.find(
+      Option(request.getCity),
+      Option(request.getStartDate).map(_.toLong),
+      Option(request.getEndDate).map(_.toLong),
+      Option(request.getStatus),
+      Option(request.getMinRating),
+      Option(request.getMaxRating),
+      Option(request.getOffset).map(_.toInt),
+      Option(request.getLimit).map(_.toInt)
+    )
+  }
 
   def getTournamentById(tournamentId: UUID): Future[Option[Tournament]] = {
     tournamentRepo.getById(tournamentId).map { result =>

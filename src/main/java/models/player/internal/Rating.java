@@ -4,37 +4,42 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import models.general.EnumClass;
 
-import java.util.Objects;
-
 @EnumClass
 public enum Rating {
-    R00("0.0"),
-    R05("0.5"),
-    R10("1.0"),
-    R15("1.5"),
-    R20("2.0"),
-    R25("2.5"),
-    R30("3.0"),
-    R35("3.5"),
-    R40("4.0"),
-    R45("4.5"),
-    R50("5.0"),
-    R55("5.5"),
-    R60("6.0"),
-    R65("6.5"),
-    R70("7.0");
+    R00(0.0f),
+    R05(0.5f),
+    R10(1.0f),
+    R15(1.5f),
+    R20(2.0f),
+    R25(2.5f),
+    R30(3.0f),
+    R35(3.5f),
+    R40(4.0f),
+    R45(4.5f),
+    R50(5.0f),
+    R55(5.5f),
+    R60(6.0f),
+    R65(6.5f),
+    R70(7.0f);
 
     @JsonValue
-    public final String value;
+    public final float value;
+
+    Rating(float value) {
+        this.value = value;
+    }
 
     @JsonCreator
-    Rating(String value) {this.value = Objects.requireNonNull(value);}
-
-    public static Rating fromValue(String value) {
-        for (Rating zone : Rating.values()) {
-            if (zone.value.equals(value)) return zone;
+    public static Rating fromJson(double value) {
+        float f = (float) value;
+        for (Rating r : Rating.values()) {
+            if (r.value == f) return r;
         }
         throw new IllegalArgumentException("Unknown Rating: " + value);
+    }
+
+    public static Rating fromValue(String value) {
+        return fromJson(Double.parseDouble(value));
     }
 
     public boolean lessThanOrEqual(Rating other) {

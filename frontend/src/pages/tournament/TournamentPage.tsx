@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Tournament } from "../types";
+import {Tournament} from "../../model/tournament/Tournament";
 
 export function TournamentPage() {
     const { tournamentId } = useParams<{ tournamentId: string }>();
@@ -125,13 +125,13 @@ export function TournamentPage() {
                             <div className="md:col-span-2 p-4 bg-emerald-500/10 backdrop-blur border border-emerald-300/50 rounded-xl">
                                 <span className="text-xs font-semibold uppercase tracking-wide text-emerald-300 mb-2 block">Rating Range</span>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-lg font-bold text-emerald-200">{tournament.minRating}</span>
+                                    <span className="text-lg font-bold text-emerald-200">{tournament.minRating.toFixed(1)}</span>
                                     <div className="flex-1 mx-4">
                                         <div className="w-full h-1.5 bg-white/30 rounded-full">
                                             <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full w-full" />
                                         </div>
                                     </div>
-                                    <span className="text-lg font-bold text-teal-200">{tournament.maxRating}</span>
+                                    <span className="text-lg font-bold text-teal-200">{tournament.maxRating.toFixed(1)}</span>
                                 </div>
                             </div>
                         </div>

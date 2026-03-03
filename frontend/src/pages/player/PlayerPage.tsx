@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Player } from "../../types";
+import {Player} from "../../model/player/Player";
 
 // Reusable FieldRow component
 const FieldRow = ({
@@ -91,7 +91,7 @@ export function PlayerPage() {
                                         {player.username}
                                     </h1>
                                     <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-xl inline-block shadow-lg">
-                                        <span className="text-2xl lg:text-3xl font-black">{player.rating}</span>
+                                        <span className="text-2xl lg:text-3xl font-black">{player.rating.toFixed(1)}</span>
                                         <span className="ml-2 text-sm lg:text-base font-semibold uppercase tracking-wide">Rating</span>
                                     </div>
                                 </div>
