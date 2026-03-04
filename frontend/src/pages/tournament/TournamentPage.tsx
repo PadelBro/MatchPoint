@@ -82,14 +82,6 @@ export function TournamentPage() {
                                 </div>
                             </div>
 
-                            {canEdit && (
-                                <button
-                                    onClick={() => navigate(`/tournaments/${tournament.id}/edit`)}
-                                    className="px-5 py-2.5 bg-white/20 backdrop-blur text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 shadow-lg hover:shadow-xl"
-                                >
-                                    Edit
-                                </button>
-                            )}
                         </div>
 
                         {/* Description */}
