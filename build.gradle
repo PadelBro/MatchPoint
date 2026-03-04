@@ -75,3 +75,8 @@ sourceSets {
 test {
     useJUnitPlatform()
 }
+
+tasks.register('run', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.matchPoint.Application'
+}
