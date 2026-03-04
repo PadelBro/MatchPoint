@@ -1,10 +1,12 @@
-interface Filters {
+import {TournamentStatus} from "./Tournament";
+
+export interface Filters {
     city: string;
-    status: string;
-    startDate: string;
-    endDate: string;
-    minRating: string;
-    maxRating: string;
+    status: TournamentStatus | null;
+    startDate: number | null;
+    endDate: number | null;
+    minRating: number | null;
+    maxRating: number | null;
     offset: number;
     limit: number;
 }
