@@ -58,7 +58,7 @@ Hybrid **Scala + Java** project:
 
 **TournamentStatus enum**: `@JsonValue` is the lowercase string (`"pending"`, `"active"`, `"completed"`). The enum constant names are uppercase (`PENDING`, etc.) — use `TournamentStatus.valueOf(s.toUpperCase)` to parse from a query param string.
 
-**GET filter endpoint** (`GET /api/tournaments`): reads query parameters (not a request body — browsers cannot send GET with body via `fetch`). Parameters: `city`, `startDate`, `endDate`, `status`, `minRating` (double), `maxRating` (double), `offset` (int), `limit` (int).
+**Filter endpoint** (`POST /api/tournaments/filter`): accepts a JSON body deserialised as `FilterTournamentsRequest`. All fields are optional (no `@NonNull`). The service maps each field with `Option(request.getField)` — null becomes `None`, set values become `Some`. Frontend sends `POST` with a JSON body built from only the non-null filter fields.
 
 **Validation timing differs by service:**
 - `PlayerService.validate()` returns `Future[Unit]` — errors surface as `Future.failed(...)`. Tests use `.failed.futureValue`.
@@ -92,3 +92,24 @@ val repo = Mockito.mock(classOf[TournamentRepository])
 ```
 
 Use `ArgumentCaptor.forClass(classOf[T])` (not the generic version) for the same reason.
+
+For capturing `Option[T]` arguments, cast the captor to the concrete type so `.capture()` satisfies the method signature:
+```scala
+val captor = ArgumentCaptor.forClass(classOf[Option[_]]).asInstanceOf[ArgumentCaptor[Option[String]]]
+```
+
+Use `BeforeAndAfterEach` + `Mockito.reset(repo)` to isolate mock state between tests:
+```scala
+class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
+  private val repo = Mockito.mock(classOf[MyRepository])
+  override def beforeEach(): Unit = Mockito.reset(repo)
+}
+```
+
+### Frontend (`frontend/src/`)
+
+**Tournament list / filter page** (`/tournaments` → `TournamentListPage.tsx`):
+- Filters persisted in `sessionStorage` under key `"tournamentFilters"` — restored on mount.
+- On mount, `runSearch(loadFilters())` fires automatically so the list populates without clicking Search.
+- Filter state uses `Filters` interface from `frontend/src/model/tournament/Filters.ts` (all fields nullable except `offset`/`limit`).
+- `runSearch(f: Filters)` accepts filters as a parameter (not from state closure) to allow calling from `useEffect` and `handleReset` without stale-closure issues.
