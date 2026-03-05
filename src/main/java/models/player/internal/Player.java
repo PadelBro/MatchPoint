@@ -5,6 +5,7 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Value
@@ -15,13 +16,7 @@ public class Player {
     UUID id;
 
     @NonNull
-    String username;
-
-    @NonNull
     Rating rating;
-
-    @NonNull
-    String homeAddress;
 
     @NonNull
     Gender gender;
