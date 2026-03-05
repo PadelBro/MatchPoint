@@ -29,11 +29,19 @@ class UserService(userRepo: UserRepository)(implicit ec: ExecutionContext) {
   private def trimOpt(s: String): Option[String] = Option(s).map(_.trim).filter(_.nonEmpty)
 
   def createUser(request: CreateUserRequest): Future[User] = {
+    logger.info("user_create_attempt email={}", request.getEmail.trim.toLowerCase)
     validate(request)
     val user = buildFromRequest(request)
-    userRepo.insert(user).recoverWith {
+    userRepo.insert(user).map { created =>
+      logger.info("user_created id={} email={}", created.getId, created.getEmail)
+      created
+    }.recoverWith {
       case _: DuplicateKeyException =>
+        logger.warn("user_create_failed reason=EMAIL_TAKEN email={}", request.getEmail.trim.toLowerCase)
         Future.failed(new IllegalArgumentException("Email already in use"))
+      case ex =>
+        logger.error("user_create_failed reason=UNEXPECTED error={}", ex.getMessage)
+        Future.failed(ex)
     }
   }
 
