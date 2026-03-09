@@ -1,13 +1,40 @@
 import { Link } from "react-router-dom";
+import { useUser } from "../context/UserContext";
 
 export function MainPage() {
+    const { user, setUser } = useUser();
+
     return (
         <div className="min-h-screen relative bg-cover bg-center bg-fixed"
              style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
             {/* Multi-layer gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-emerald-900/50"></div>
 
-            <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+            {/* Top navigation bar */}
+            <div className="relative z-20 flex items-center justify-end px-6 py-4">
+                {user ? (
+                    <div className="flex items-center gap-4">
+                        <span className="text-white/90 font-semibold">
+                            {user.firstName} {user.lastName}
+                        </span>
+                        <button
+                            onClick={() => setUser(null)}
+                            className="px-4 py-2 text-white/80 font-semibold rounded-xl hover:text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 border border-white/30 hover:border-white/50 text-sm"
+                        >
+                            Log out
+                        </button>
+                    </div>
+                ) : (
+                    <Link
+                        to="/register"
+                        className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm"
+                    >
+                        Register
+                    </Link>
+                )}
+            </div>
+
+            <div className="relative z-10 flex items-center justify-center min-h-screen px-4 -mt-16">
                 <div className="w-full max-w-4xl mx-auto text-center">
 
                     {/* Hero content */}
@@ -27,24 +54,22 @@ export function MainPage() {
                         </p>
 
                         {/* CTA Buttons */}
-                        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6 justify-center items-center">
+                        <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6 justify-center items-stretch">
                             <Link
-                                to="/players/register"
-                                className="group relative px-10 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xl rounded-2xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-500 overflow-hidden w-full sm:w-auto max-w-sm"
+                                to="/tournaments"
+                                className="group relative px-10 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-xl rounded-2xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-500 overflow-hidden w-full sm:w-72"
                             >
-                                <span className="relative z-10">Register a Player</span>
+                                <span className="relative z-10 flex items-center justify-center h-full">Find your next Tournament</span>
                                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -translate-y-full group-hover:translate-y-0"></div>
                             </Link>
-
                             <Link
                                 to="/tournaments/new"
-                                className="group relative px-10 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-xl rounded-2xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-500 overflow-hidden w-full sm:w-auto max-w-sm"
+                                className="group relative px-10 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-xl rounded-2xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-500 overflow-hidden w-full sm:w-72"
                             >
-                                <span className="relative z-10">Create a Tournament</span>
+                                <span className="relative z-10 flex items-center justify-center h-full">Start your own Tournament</span>
                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -translate-y-full group-hover:translate-y-0"></div>
                             </Link>
                         </div>
-
                         {/* Secondary links */}
                         <div className="flex flex-col sm:flex-row gap-4 mt-16 pt-12 border-t border-white/20 justify-center">
                             <Link
@@ -52,12 +77,6 @@ export function MainPage() {
                                 className="px-8 py-3 text-white/90 font-semibold rounded-xl hover:text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 border border-white/30 hover:border-white/50 flex-1 text-center"
                             >
                                 Browse Players
-                            </Link>
-                            <Link
-                                to="/tournaments"
-                                className="px-8 py-3 text-white/90 font-semibold rounded-xl hover:text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 border border-white/30 hover:border-white/50 flex-1 text-center"
-                            >
-                                View Tournaments
                             </Link>
                         </div>
                     </div>

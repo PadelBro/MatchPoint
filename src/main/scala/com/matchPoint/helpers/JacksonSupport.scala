@@ -20,6 +20,7 @@ object JacksonSupport {
   private val mapper = new ObjectMapper()
     .registerModule(DefaultScalaModule)
     .registerModule(new JavaTimeModule())
+    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
   implicit def JacksonMarshaller: ToEntityMarshaller[AnyRef] = {

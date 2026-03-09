@@ -43,6 +43,11 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter:3.5.4"
     implementation "org.springframework.boot:spring-boot-starter-jdbc:3.5.4"
 
+    // User validation
+    implementation "commons-validator:commons-validator:1.9.0"
+    implementation "com.googlecode.libphonenumber:libphonenumber:8.13.50"
+    implementation "org.springframework.security:spring-security-crypto:6.4.4"
+
     // Lombok (compileOnly)
     compileOnly "org.projectlombok:lombok:1.18.36"
     annotationProcessor "org.projectlombok:lombok:1.18.36"

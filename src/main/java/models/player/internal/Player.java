@@ -15,13 +15,10 @@ public class Player {
     UUID id;
 
     @NonNull
-    String username;
+    UUID userId;
 
     @NonNull
     Rating rating;
-
-    @NonNull
-    String homeAddress;
 
     @NonNull
     Gender gender;
@@ -32,10 +29,7 @@ public class Player {
     @NonNull
     Side courtSide;
 
-    String playtomicProfileUrl;
-
     Long createdAt;
 
     Long updatedAt;
 }
-

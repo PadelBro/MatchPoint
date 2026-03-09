@@ -22,22 +22,22 @@ class PlayerServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with
 
   override def beforeEach(): Unit = Mockito.reset(repo)
 
-  private def validRequest(username: String = "testuser") =
+  private val userId = UUID.randomUUID()
+
+  private def validRequest() =
     UpsertPlayerRequest.builder()
-      .username(username)
+      .userId(userId)
       .rating(Rating.R35)
-      .homeAddress("Amsterdam")
       .gender(Gender.MALE)
       .hand(Side.RIGHT)
       .courtSide(Side.LEFT)
       .build()
 
-  private def player(username: String = "testuser") =
+  private def player() =
     Player.builder()
       .id(UUID.randomUUID())
-      .username(username)
+      .userId(userId)
       .rating(Rating.R35)
-      .homeAddress("Amsterdam")
       .gender(Gender.MALE)
       .hand(Side.RIGHT)
       .courtSide(Side.LEFT)
@@ -47,73 +47,6 @@ class PlayerServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with
 
   "upsertPlayer" should "delegate to repo and return the created player" in {
     val p = player()
-    when(repo.getByUsername(any())).thenReturn(Future.successful(None))
-    when(repo.upsert(any())).thenReturn(Future.successful(p))
-    service.upsertPlayer(validRequest()).futureValue shouldBe p
-  }
-
-  it should "fail when username is shorter than 3 characters" in {
-    service.upsertPlayer(validRequest("ab")).failed.futureValue shouldBe an[IllegalArgumentException]
-  }
-
-  it should "fail when username is longer than 30 characters" in {
-    service.upsertPlayer(validRequest("a" * 31)).failed.futureValue shouldBe an[IllegalArgumentException]
-  }
-
-  it should "fail when username is exactly 3 characters — boundary passes" in {
-    val p = player("abc")
-    when(repo.getByUsername(any())).thenReturn(Future.successful(None))
-    when(repo.upsert(any())).thenReturn(Future.successful(p))
-    service.upsertPlayer(validRequest("abc")).futureValue shouldBe p
-  }
-
-  it should "fail when username is exactly 30 characters — boundary passes" in {
-    val name = "a" * 30
-    val p    = player(name)
-    when(repo.getByUsername(any())).thenReturn(Future.successful(None))
-    when(repo.upsert(any())).thenReturn(Future.successful(p))
-    service.upsertPlayer(validRequest(name)).futureValue shouldBe p
-  }
-
-  it should "fail when username is already taken" in {
-    when(repo.getByUsername(any())).thenReturn(Future.successful(Some(player())))
-    service.upsertPlayer(validRequest()).failed.futureValue shouldBe an[IllegalArgumentException]
-  }
-
-  it should "fail when playtomicProfileUrl is not a valid URL" in {
-    val req = UpsertPlayerRequest.builder()
-      .username("testuser")
-      .rating(Rating.R35)
-      .homeAddress("Amsterdam")
-      .gender(Gender.MALE)
-      .hand(Side.RIGHT)
-      .courtSide(Side.LEFT)
-      .playtomicProfileUrl("not-a-url")
-      .build()
-
-    service.upsertPlayer(req).failed.futureValue shouldBe an[IllegalArgumentException]
-  }
-
-  it should "succeed with a valid playtomicProfileUrl" in {
-    val p = player()
-    val req = UpsertPlayerRequest.builder()
-      .username("testuser")
-      .rating(Rating.R35)
-      .homeAddress("Amsterdam")
-      .gender(Gender.MALE)
-      .hand(Side.RIGHT)
-      .courtSide(Side.LEFT)
-      .playtomicProfileUrl("https://playtomic.io/user/123")
-      .build()
-
-    when(repo.getByUsername(any())).thenReturn(Future.successful(None))
-    when(repo.upsert(any())).thenReturn(Future.successful(p))
-    service.upsertPlayer(req).futureValue shouldBe p
-  }
-
-  it should "treat a null playtomicProfileUrl as absent and not validate it" in {
-    val p = player()
-    when(repo.getByUsername(any())).thenReturn(Future.successful(None))
     when(repo.upsert(any())).thenReturn(Future.successful(p))
     service.upsertPlayer(validRequest()).futureValue shouldBe p
   }

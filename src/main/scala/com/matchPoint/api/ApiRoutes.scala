@@ -8,13 +8,14 @@ import scala.concurrent.ExecutionContext
 
 @Service
 @Autowired()
-class ApiRoutes(playerRoutes: PlayerRoutes, tournamentRoutes: TournamentRoutes)(implicit ec: ExecutionContext) extends Directives {
+class ApiRoutes(playerRoutes: PlayerRoutes, tournamentRoutes: TournamentRoutes, userRoutes: UserRoutes)(implicit ec: ExecutionContext) extends Directives {
 
   val routes: Route =
     pathPrefix("api") {
       concat(
         playerRoutes.routes,
-        tournamentRoutes.routes
+        tournamentRoutes.routes,
+        userRoutes.routes
       )
     }
 }
