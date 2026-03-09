@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 
 import java.sql.Date
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 @Repository
@@ -49,5 +50,11 @@ class UserRepository(
         "playtomicProfileUrl" -> user.getPlaytomicProfileUrl,
         "status"              -> user.getStatus.value
       )
+    )
+
+  def getById(userId: UUID): Future[Option[User]] =
+    jdbcTemplate.queryOption[User](
+      "SELECT * FROM app_user WHERE id = :id",
+      Map("id" -> userId)
     )
 }

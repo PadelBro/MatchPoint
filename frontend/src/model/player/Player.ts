@@ -3,11 +3,9 @@ export type Side = "LEFT" | "RIGHT";
 
 export interface Player {
     id: string;
-    username: string;
+    userId: string;
     rating: number;
-    homeAddress: string;
     gender: Gender;
     hand: Side;
     courtSide: Side;
-    playtomicProfileUrl?: string;
 }

@@ -23,28 +23,21 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
       """
         |INSERT INTO player (
         |  id,
-        |  username,
+        |  user_id,
         |  rating,
-        |  home_address,
-        |  playtomic_profile_url,
         |  gender,
         |  hand,
         |  court_side
         |) VALUES (
         |  :id,
-        |  :username,
+        |  :userId,
         |  :rating,
-        |  :homeAddress,
-        |  :playtomicProfileUrl,
         |  :gender,
         |  :hand,
         |  :courtSide
         |)
         |ON CONFLICT (id) DO UPDATE SET
-        |  username = EXCLUDED.username,
         |  rating = EXCLUDED.rating,
-        |  home_address = EXCLUDED.home_address,
-        |  playtomic_profile_url = EXCLUDED.playtomic_profile_url,
         |  gender = EXCLUDED.gender,
         |  hand = EXCLUDED.hand,
         |  court_side = EXCLUDED.court_side,
@@ -52,13 +45,11 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |RETURNING *
         |""".stripMargin,
       Map(
-        "id" -> Option(player.getId).getOrElse(java.util.UUID.randomUUID()),
-        "username" -> player.getUsername,
-        "rating" -> player.getRating.value,
-        "homeAddress" -> player.getHomeAddress,
-        "playtomicProfileUrl" -> player.getPlaytomicProfileUrl,
-        "gender" -> player.getGender.value,
-        "hand" -> player.getHand.value,
+        "id"       -> Option(player.getId).getOrElse(java.util.UUID.randomUUID()),
+        "userId"   -> player.getUserId,
+        "rating"   -> player.getRating.value,
+        "gender"   -> player.getGender.value,
+        "hand"     -> player.getHand.value,
         "courtSide" -> player.getCourtSide.value
       )
     )
@@ -75,17 +66,6 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
     )
   }
 
-  def getByUsername(username: String): Future[Option[Player]] = {
-    jdbcTemplate.queryOption[Player](
-      """
-        |SELECT * FROM player WHERE username = :username
-        |""".stripMargin,
-      Map(
-        "username" -> username
-      )
-    )
-  }
-
   def delete(playerId: UUID): Future[Option[Player]] = {
     jdbcTemplate.queryOption[Player](
       """
@@ -97,4 +77,3 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
     )
   }
 }
-

@@ -18,13 +18,10 @@ public class UpsertPlayerRequest {
     UUID id;
 
     @NonNull
-    String username;
+    UUID userId;
 
     @NonNull
     Rating rating;
-
-    @NonNull
-    String homeAddress;
 
     @NonNull
     Gender gender;
@@ -34,6 +31,4 @@ public class UpsertPlayerRequest {
 
     @NonNull
     Side courtSide;
-
-    String playtomicProfileUrl;
 }

@@ -8,6 +8,7 @@ import models.user.external.CreateUserRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 @Service
@@ -17,15 +18,25 @@ class UserRoutes(service: UserService)(implicit ec: ExecutionContext) extends Di
   val routes: Route =
     handleExceptions(ApiExceptionHandler.handler) {
       pathPrefix("users") {
-        post {
-          pathEndOrSingleSlash {
-            entity(as[CreateUserRequest]) { request =>
-              onSuccess(service.createUser(request)) { user =>
-                complete(StatusCodes.Created, user)
+        concat(
+          post {
+            pathEndOrSingleSlash {
+              entity(as[CreateUserRequest]) { request =>
+                onSuccess(service.createUser(request)) { user =>
+                  complete(StatusCodes.Created, user)
+                }
+              }
+            }
+          },
+          get {
+            path(JavaUUID) { userId =>
+              onSuccess(service.getUser(userId)) {
+                case Some(user) => complete(user)
+                case None       => complete(StatusCodes.NotFound)
               }
             }
           }
-        }
+        )
       }
     }
 }

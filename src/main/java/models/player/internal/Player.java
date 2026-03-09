@@ -5,7 +5,6 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 @Value
@@ -14,6 +13,9 @@ import java.util.UUID;
 public class Player {
 
     UUID id;
+
+    @NonNull
+    UUID userId;
 
     @NonNull
     Rating rating;
@@ -27,10 +29,7 @@ public class Player {
     @NonNull
     Side courtSide;
 
-    String playtomicProfileUrl;
-
     Long createdAt;
 
     Long updatedAt;
 }
-

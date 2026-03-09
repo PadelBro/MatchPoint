@@ -115,4 +115,7 @@ class UserService(userRepo: UserRepository)(implicit ec: ExecutionContext) {
       .playtomicProfileUrl(trimOpt(request.getPlaytomicProfileUrl).orNull)
       .status(UserStatus.ACTIVE)
       .build()
+
+  def getUser(userId: UUID): Future[Option[User]] =
+    userRepo.getById(userId)
 }
