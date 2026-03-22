@@ -2,8 +2,9 @@ package com.matchPoint.services
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat
+import com.matchPoint.helpers.JwtService
 import com.matchPoint.repositories.UserRepository
-import models.user.external.CreateUserRequest
+import models.user.external.{CreateUserRequest, LoginRequest, LoginResponse}
 import models.user.internal.{User, UserStatus}
 import org.apache.commons.validator.routines.EmailValidator
 import org.slf4j.LoggerFactory
@@ -20,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Service
 @Autowired
-class UserService(userRepo: UserRepository)(implicit ec: ExecutionContext) {
+class UserService(userRepo: UserRepository, jwtService: JwtService)(implicit ec: ExecutionContext) {
 
   private val logger    = LoggerFactory.getLogger(getClass)
   private val bcrypt    = new BCryptPasswordEncoder()
@@ -118,4 +119,27 @@ class UserService(userRepo: UserRepository)(implicit ec: ExecutionContext) {
 
   def getUser(userId: UUID): Future[Option[User]] =
     userRepo.getById(userId)
+
+  def login(request: LoginRequest): Future[LoginResponse] = {
+    val email = request.getEmail.trim.toLowerCase
+    logger.info("user_login_attempt email={}", email)
+    userRepo.getByEmail(email).map {
+      case None =>
+        throw new IllegalArgumentException("Invalid email or password")
+      case Some(user) =>
+        if (!bcrypt.matches(request.getPassword, user.getPasswordHash))
+          throw new IllegalArgumentException("Invalid email or password")
+        if (user.getStatus != UserStatus.ACTIVE)
+          throw new IllegalArgumentException("Account is not active")
+        val token = jwtService.generateToken(user.getId)
+        logger.info("user_login_success id={}", user.getId)
+        LoginResponse.builder()
+          .token(token)
+          .id(user.getId)
+          .firstName(user.getFirstName)
+          .lastName(user.getLastName)
+          .email(user.getEmail)
+          .build()
+    }
+  }
 }

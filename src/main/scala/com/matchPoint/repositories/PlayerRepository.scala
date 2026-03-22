@@ -66,6 +66,13 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
     )
   }
 
+  def getByUserId(userId: UUID): Future[Option[Player]] = {
+    jdbcTemplate.queryOption[Player](
+      "SELECT * FROM player WHERE user_id = :userId",
+      Map("userId" -> userId)
+    )
+  }
+
   def delete(playerId: UUID): Future[Option[Player]] = {
     jdbcTemplate.queryOption[Player](
       """

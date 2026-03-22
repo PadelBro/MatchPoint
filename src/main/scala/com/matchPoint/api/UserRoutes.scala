@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
 import com.matchPoint.helpers.JacksonSupport._
 import com.matchPoint.services.UserService
-import models.user.external.CreateUserRequest
+import models.user.external.{CreateUserRequest, LoginRequest}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -20,13 +20,22 @@ class UserRoutes(service: UserService)(implicit ec: ExecutionContext) extends Di
       pathPrefix("users") {
         concat(
           post {
-            pathEndOrSingleSlash {
-              entity(as[CreateUserRequest]) { request =>
-                onSuccess(service.createUser(request)) { user =>
-                  complete(StatusCodes.Created, user)
+            concat(
+              pathEndOrSingleSlash {
+                entity(as[CreateUserRequest]) { request =>
+                  onSuccess(service.createUser(request)) { user =>
+                    complete(StatusCodes.Created, user)
+                  }
+                }
+              },
+              path("login") {
+                entity(as[LoginRequest]) { request =>
+                  onSuccess(service.login(request)) { response =>
+                    complete(response)
+                  }
                 }
               }
-            }
+            )
           },
           get {
             path(JavaUUID) { userId =>

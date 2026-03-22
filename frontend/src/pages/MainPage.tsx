@@ -14,9 +14,12 @@ export function MainPage() {
             <div className="relative z-20 flex items-center justify-end px-6 py-4">
                 {user ? (
                     <div className="flex items-center gap-4">
-                        <span className="text-white/90 font-semibold">
+                        <Link
+                            to="/settings"
+                            className="text-white/90 font-semibold hover:text-white hover:underline transition-colors"
+                        >
                             {user.firstName} {user.lastName}
-                        </span>
+                        </Link>
                         <button
                             onClick={() => setUser(null)}
                             className="px-4 py-2 text-white/80 font-semibold rounded-xl hover:text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 border border-white/30 hover:border-white/50 text-sm"
@@ -25,12 +28,20 @@ export function MainPage() {
                         </button>
                     </div>
                 ) : (
-                    <Link
-                        to="/register"
-                        className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm"
-                    >
-                        Register
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            to="/login"
+                            className="px-6 py-2.5 text-white/80 font-semibold rounded-xl hover:text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 border border-white/30 hover:border-white/50 text-sm"
+                        >
+                            Log In
+                        </Link>
+                        <Link
+                            to="/register"
+                            className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all duration-300 text-sm"
+                        >
+                            Register
+                        </Link>
+                    </div>
                 )}
             </div>
 

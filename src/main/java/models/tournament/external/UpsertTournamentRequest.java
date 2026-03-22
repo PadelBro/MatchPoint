@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 @Jacksonized
 public class UpsertTournamentRequest {
 
@@ -34,7 +34,6 @@ public class UpsertTournamentRequest {
     @NonNull
     Long endDate;
 
-    @NonNull
     List<UUID> organizerIds;
 
     @NonNull

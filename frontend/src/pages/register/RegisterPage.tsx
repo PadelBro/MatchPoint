@@ -119,7 +119,17 @@ export function RegisterPage() {
 
             const user = await res.json();
             setCreatedUserId(user.id);
-            setUser({ id: user.id, firstName: user.firstName, lastName: user.lastName });
+
+            const loginRes = await fetch("/api/users/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: userForm.email.trim().toLowerCase(), password: userForm.password }),
+            });
+            if (loginRes.ok) {
+                const session = await loginRes.json();
+                setUser({ id: session.id, firstName: session.firstName, lastName: session.lastName, token: session.token });
+            }
+
             setStep(2);
         } catch {
             setUserErrors({ form: "Failed to submit" });

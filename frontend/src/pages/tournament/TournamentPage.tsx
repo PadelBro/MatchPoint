@@ -1,15 +1,15 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import {Tournament} from "../../model/tournament/Tournament";
+import { Tournament, TournamentStatus } from "../../model/tournament/Tournament";
+import { useUser } from "../../context/UserContext";
 
 export function TournamentPage() {
     const { tournamentId } = useParams<{ tournamentId: string }>();
     const navigate = useNavigate();
+    const { user } = useUser();
 
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [loading, setLoading] = useState(true);
-
-    const canEdit = true; // TODO(auth): replace with AuthContext + organizer check
 
     useEffect(() => {
         if (!tournamentId) return;
@@ -32,6 +32,8 @@ export function TournamentPage() {
         return <div className="min-h-screen flex items-center justify-center bg-gray-100">Tournament not found</div>;
     }
 
+    const canEdit = !!user && tournament.organizerIds.includes(user.id);
+
     const formatDate = (date: string | number) =>
         new Date(date).toLocaleString('en-US', {
             month: 'short',
@@ -40,13 +42,10 @@ export function TournamentPage() {
             minute: '2-digit'
         });
 
-    const getStatusBadge = (status: Tournament['status']) => {
-        const colors = {
-            pending: 'bg-gray-500',
-            active: 'bg-emerald-500',
-            completed: 'bg-blue-500'
-        };
-        return colors[status as keyof typeof colors] || 'bg-gray-500';
+    const statusColor: Record<TournamentStatus, string> = {
+        pending: "bg-yellow-400/20 text-yellow-300 border-yellow-400/50",
+        active: "bg-emerald-400/20 text-emerald-300 border-emerald-400/50",
+        completed: "bg-gray-400/20 text-gray-400 border-gray-400/40",
     };
 
     return (
@@ -77,9 +76,9 @@ export function TournamentPage() {
                                 <h1 className="text-3xl font-black text-white drop-shadow-lg leading-tight">
                                     {tournament.name}
                                 </h1>
-                                <div className={`inline-flex mt-2 px-3 py-1 rounded-full text-sm font-bold text-white shadow-lg ${getStatusBadge(tournament.status)}`}>
-                                    {tournament.status.toUpperCase()}
-                                </div>
+                                <span className={`inline-flex mt-2 px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider ${statusColor[tournament.status]}`}>
+                                    {tournament.status}
+                                </span>
                             </div>
 
                         </div>

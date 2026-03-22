@@ -56,6 +56,9 @@ class PlayerService(playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
   def getPlayer(playerId: UUID): Future[Option[Player]] =
     playerRepo.getById(playerId)
 
+  def getPlayerByUserId(userId: UUID): Future[Option[Player]] =
+    playerRepo.getByUserId(userId)
+
   def deletePlayer(playerId: UUID): Future[Boolean] =
     playerRepo.delete(playerId).map { result =>
       if (result.isDefined)

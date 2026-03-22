@@ -57,4 +57,10 @@ class UserRepository(
       "SELECT * FROM app_user WHERE id = :id",
       Map("id" -> userId)
     )
+
+  def getByEmail(email: String): Future[Option[User]] =
+    jdbcTemplate.queryOption[User](
+      "SELECT * FROM app_user WHERE email = :email",
+      Map("email" -> email)
+    )
 }
