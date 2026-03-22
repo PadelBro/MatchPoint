@@ -2,20 +2,22 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 import {Tournament} from "../../model/tournament/Tournament";
+import { useUser } from "../../context/UserContext";
 
 type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'> | "form", string>>;
 
 export function TournamentCreatePage() {
     const navigate = useNavigate();
+    const { user } = useUser();
 
-    const [form, setForm] = useState<Omit<Tournament, 'id'>>({
+
+    const [form, setForm] = useState<Omit<Tournament, 'id' | 'organizerIds'>>({
         name: "",
         description: "",
         city: "",
         prizes: "",
         startDate: NaN,
         endDate: NaN,
-        organizerIds: ["6cf40eff-f53f-4766-bae8-340c2eb72042"],
         status: "pending",
         minRating: NaN,
         maxRating: NaN,
@@ -82,7 +84,10 @@ export function TournamentCreatePage() {
         try {
             const res = await fetch("/api/tournaments", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${user!.token}`,
+                },
                 body: JSON.stringify({
                     name: form.name.trim(),
                     description: form.description?.trim() || undefined,
@@ -90,7 +95,6 @@ export function TournamentCreatePage() {
                     prizes: form.prizes?.trim() || undefined,
                     startDate: form.startDate,
                     endDate: form.endDate,
-                    organizerIds: form.organizerIds,
                     status: form.status,
                     minRating: form.minRating,
                     maxRating: form.maxRating,
@@ -110,6 +114,36 @@ export function TournamentCreatePage() {
             setSubmitting(false);
         }
     };
+
+    if (!user) {
+        return (
+            <div className="min-h-screen relative bg-cover bg-center bg-fixed"
+                 style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
+                <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-emerald-900/60"></div>
+                <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+                    <div className="text-center backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-10 max-w-md w-full space-y-6">
+                        <div className="text-5xl">🔒</div>
+                        <h1 className="text-2xl font-black text-white">Members only</h1>
+                        <p className="text-white/70 text-sm">Only logged-in users can create tournaments. Please log in or create an account to continue.</p>
+                        <div className="flex gap-3 justify-center">
+                            <button
+                                onClick={() => navigate("/login")}
+                                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg transition-all duration-200"
+                            >
+                                Log In
+                            </button>
+                            <button
+                                onClick={() => navigate("/register")}
+                                className="px-6 py-3 bg-white/20 hover:bg-white/30 border border-white/30 text-white font-bold rounded-xl transition-all duration-200"
+                            >
+                                Register
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen relative bg-cover bg-center bg-fixed"

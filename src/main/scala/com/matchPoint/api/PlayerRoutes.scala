@@ -26,6 +26,16 @@ class PlayerRoutes(service: PlayerService)(implicit ec: ExecutionContext)
               }
             }
           },
+          get {
+            pathEndOrSingleSlash {
+              parameter("userId") { userIdStr =>
+                onSuccess(service.getPlayerByUserId(java.util.UUID.fromString(userIdStr))) {
+                  case Some(player) => complete(player)
+                  case None         => complete(StatusCodes.NotFound)
+                }
+              }
+            }
+          },
           path(JavaUUID) { id =>
             concat(
               get {

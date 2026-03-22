@@ -1,5 +1,6 @@
 package com.matchPoint.services
 
+import com.matchPoint.helpers.JwtService
 import com.matchPoint.repositories.UserRepository
 import models.user.external.CreateUserRequest
 import models.user.internal.{User, UserStatus}
@@ -20,9 +21,10 @@ import scala.concurrent.Future
 class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with BeforeAndAfterEach {
 
   private val repo    = Mockito.mock(classOf[UserRepository])
-  private val service = new UserService(repo)
+  private val jwt     = Mockito.mock(classOf[JwtService])
+  private val service = new UserService(repo, jwt)
 
-  override def beforeEach(): Unit = Mockito.reset(repo)
+  override def beforeEach(): Unit = Mockito.reset(repo, jwt)
 
   private def validRequest(
     firstName: String  = "John",

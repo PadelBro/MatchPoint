@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-type SessionUser = { id: string; firstName: string; lastName: string };
+type SessionUser = { id: string; firstName: string; lastName: string; token: string };
 
 type UserContextType = {
     user: SessionUser | null;

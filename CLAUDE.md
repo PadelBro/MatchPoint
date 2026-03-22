@@ -106,7 +106,18 @@ class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
 }
 ```
 
+**Akka HTTP query parameter UUID gotcha:** `parameter("foo".as[java.util.UUID])` does **not** compile — Akka HTTP has no built-in `Unmarshaller[String, UUID]`. Always use `parameter("foo")` (String) and call `java.util.UUID.fromString(str)` manually. `ApiExceptionHandler` already maps `IllegalArgumentException` → 400, so invalid UUIDs are handled gracefully.
+
+**Player lookup by userId:** `GET /api/players?userId=<uuid>` returns the player for that user (or 404). Use this from the frontend when only the session user ID is available (e.g., settings page). The session stores `{ id, firstName, lastName, token }` where `id` is the **user** UUID, not the player UUID.
+
 ### Frontend (`frontend/src/`)
+
+**Player settings page** (`/settings` → `PlayerSettingsPage.tsx`):
+- Requires an authenticated session; redirects to `/login` if none.
+- On mount: fetches `GET /api/players?userId={user.id}` to load the existing player profile.
+- Pre-fills the form if a player exists; shows an informational notice if not (first-time setup).
+- Saves via `POST /api/players` (upsert) — sends the existing `player.id` when updating, omits it when creating.
+- The profile name in the navbar (`MainPage.tsx`) is a `<Link to="/settings">` when logged in.
 
 **Tournament list / filter page** (`/tournaments` → `TournamentListPage.tsx`):
 - Filters persisted in `sessionStorage` under key `"tournamentFilters"` — restored on mount.

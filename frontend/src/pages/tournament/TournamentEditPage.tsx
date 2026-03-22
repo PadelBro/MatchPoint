@@ -2,12 +2,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {Tournament} from "../../model/tournament/Tournament";
 import {RATING_OPTIONS} from "../../model/player/RatingOptions";
+import { useUser } from "../../context/UserContext";
 
 type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'>, string>>;
 
 export function TournamentEditPage() {
     const { tournamentId } = useParams<{ tournamentId: string }>();
     const navigate = useNavigate();
+    const { user } = useUser();
 
     const [form, setForm] = useState<Omit<Tournament, 'id'> | null>(null);
     const [loading, setLoading] = useState(true);
@@ -103,7 +105,10 @@ export function TournamentEditPage() {
         try {
             const res = await fetch(`/api/tournaments`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${user!.token}`,
+                },
                 body: JSON.stringify({
                     id: tournamentId,
                     name: form.name.trim(),

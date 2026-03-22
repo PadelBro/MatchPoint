@@ -66,6 +66,19 @@ class PlayerServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with
     service.getPlayer(id).futureValue shouldBe None
   }
 
+  // ── getPlayerByUserId ────────────────────────────────────────────────────────
+
+  "getPlayerByUserId" should "return Some when a player exists for the given userId" in {
+    val p = player()
+    when(repo.getByUserId(userId)).thenReturn(Future.successful(Some(p)))
+    service.getPlayerByUserId(userId).futureValue shouldBe Some(p)
+  }
+
+  it should "return None when no player exists for the given userId" in {
+    when(repo.getByUserId(userId)).thenReturn(Future.successful(None))
+    service.getPlayerByUserId(userId).futureValue shouldBe None
+  }
+
   // ── deletePlayer ─────────────────────────────────────────────────────────────
 
   "deletePlayer" should "return true when player existed and was deleted" in {
