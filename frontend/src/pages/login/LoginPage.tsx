@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
+import { getErrorMessage } from "../../utils/apiError";
 
 type FieldErrors = Partial<Record<"email" | "password" | "form", string>>;
 
@@ -52,8 +53,7 @@ export function LoginPage() {
             });
 
             if (!res.ok) {
-                const msg = await res.text().catch(() => "");
-                setErrors({ form: msg || "Invalid email or password" });
+                setErrors({ form: await getErrorMessage(res, "Invalid email or password") });
                 return;
             }
 

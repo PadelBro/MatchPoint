@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { RATING_OPTIONS } from "../../model/player/RatingOptions";
 import { STATUSES, Tournament, TournamentStatus } from "../../model/tournament/Tournament";
 import { Filters } from "../../model/tournament/Filters";
+import { getErrorMessage } from "../../utils/apiError";
 
 const STORAGE_KEY = "tournamentFilters";
 
@@ -76,7 +77,7 @@ export function TournamentListPage() {
                 body: JSON.stringify(body),
             });
 
-            if (!res.ok) throw new Error(await res.text() || "Search failed");
+            if (!res.ok) throw new Error(await getErrorMessage(res, "Search failed"));
             setTournaments(await res.json());
             setSearched(true);
         } catch (err: any) {

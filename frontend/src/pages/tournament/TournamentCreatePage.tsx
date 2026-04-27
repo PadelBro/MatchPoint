@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 import {Tournament} from "../../model/tournament/Tournament";
 import { useUser } from "../../context/UserContext";
+import { getErrorMessage } from "../../utils/apiError";
 
 type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'> | "form", string>>;
 
@@ -102,8 +103,7 @@ export function TournamentCreatePage() {
             });
 
             if (!res.ok) {
-                const body = await res.text();
-                throw new Error(body || "Failed to create");
+                throw new Error(await getErrorMessage(res, "Failed to create"));
             }
 
             const tournament = await res.json();

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RATING_OPTIONS } from "../../model/player/RatingOptions";
 import { useUser } from "../../context/UserContext";
+import { getErrorMessage } from "../../utils/apiError";
 
 // ── Step 1: user info ────────────────────────────────────────────────────────
 
@@ -105,8 +106,7 @@ export function RegisterPage() {
                 body: JSON.stringify(checkBody),
             });
             if (!res.ok) {
-                const msg = await res.text().catch(() => "");
-                setUserErrors({ form: msg || "Failed to check availability" });
+                setUserErrors({ form: await getErrorMessage(res, "Failed to check availability") });
                 return;
             }
             setStep(2);
@@ -163,8 +163,7 @@ export function RegisterPage() {
                 body: JSON.stringify(userBody),
             });
             if (!userRes.ok) {
-                const msg = await userRes.text().catch(() => "");
-                setUserErrors({ form: msg || "Failed to create account" });
+                setUserErrors({ form: await getErrorMessage(userRes, "Failed to create account") });
                 setStep(1);
                 return;
             }
@@ -196,8 +195,7 @@ export function RegisterPage() {
                 }),
             });
             if (!playerRes.ok) {
-                const msg = await playerRes.text().catch(() => "");
-                setPlayerErrors({ form: msg || "Failed to create player profile" });
+                setPlayerErrors({ form: await getErrorMessage(playerRes, "Failed to create player profile") });
                 return;
             }
             const player = await playerRes.json();

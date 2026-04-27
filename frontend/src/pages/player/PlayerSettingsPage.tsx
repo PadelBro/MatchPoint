@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
 import { RATING_OPTIONS } from "../../model/player/RatingOptions";
 import type { Player } from "../../model/player/Player";
+import { getErrorMessage } from "../../utils/apiError";
 
 type PlayerForm = {
     rating: string;
@@ -92,8 +93,7 @@ export function PlayerSettingsPage() {
             });
 
             if (!res.ok) {
-                const msg = await res.text().catch(() => "");
-                setErrors({ form: msg || "Failed to save" });
+                setErrors({ form: await getErrorMessage(res, "Failed to save") });
                 return;
             }
 
