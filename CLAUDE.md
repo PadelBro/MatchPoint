@@ -63,6 +63,15 @@ Hybrid **Scala + Java** project:
 **Validation timing differs by service:**
 - `PlayerService.validate()` returns `Future[Unit]` — errors surface as `Future.failed(...)`. Tests use `.failed.futureValue`.
 - `TournamentService.validate()` returns `Unit` and **throws synchronously** before any `Future` is created. Tests must use `intercept[IllegalArgumentException]`, not `.failed.futureValue`.
+- `UserService.checkAvailability()` returns `Future[Unit]` — all errors (email taken, phone taken, invalid phone) surface as `Future.failed(IllegalArgumentException)`. Tests use `.failed.futureValue`.
+
+**`onSuccess` with `Future[Unit]` does not compile in Akka HTTP** — use `onComplete` instead:
+```scala
+onComplete(service.checkAvailability(request)) {
+  case scala.util.Success(_)  => complete(StatusCodes.OK)
+  case scala.util.Failure(ex) => throw ex  // caught by handleExceptions
+}
+```
 
 ### Frontend (`frontend/src/`)
 
@@ -110,6 +119,11 @@ class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
 
 **Player lookup by userId:** `GET /api/players?userId=<uuid>` returns the player for that user (or 404). Use this from the frontend when only the session user ID is available (e.g., settings page). The session stores `{ id, firstName, lastName, token }` where `id` is the **user** UUID, not the player UUID.
 
+**Registration flow** (`/register` → `RegisterPage.tsx`) is 2-step:
+- Step 1: collects account details, validates locally, then calls `POST /api/users/check` to verify email/phone availability — no user is created yet. Errors appear on step 1 immediately.
+- Step 2: on final submit, calls `POST /api/users` → `POST /api/users/login` → `setUser()` → `POST /api/players` → navigate to `/players/:id`. If user creation fails (e.g. race condition on email), error is shown on step 1 via `setUserErrors({ form: msg })` + `setStep(1)`.
+- The Back button is safe: no DB records exist until step 2 is submitted.
+
 ### Frontend (`frontend/src/`)
 
 **Player settings page** (`/settings` → `PlayerSettingsPage.tsx`):
@@ -124,3 +138,11 @@ class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
 - On mount, `runSearch(loadFilters())` fires automatically so the list populates without clicking Search.
 - Filter state uses `Filters` interface from `frontend/src/model/tournament/Filters.ts` (all fields nullable except `offset`/`limit`).
 - `runSearch(f: Filters)` accepts filters as a parameter (not from state closure) to allow calling from `useEffect` and `handleReset` without stale-closure issues.
+
+## PR Descriptions
+
+Structure: title (`MP-XX: short description`), then sections: **Problem**, **Solution**, optionally grouped sub-sections (Backend / Frontend / Tests), and **Before / After**.
+
+- Use bullet lists throughout — no tables
+- Before / After items follow the pattern: `- <scenario>: was <old behaviour>, now <new behaviour>`
+- Keep it concise: one sentence per bullet, no filler words
