@@ -2,7 +2,7 @@ package com.matchPoint.services
 
 import com.matchPoint.helpers.JwtService
 import com.matchPoint.repositories.UserRepository
-import models.user.external.CreateUserRequest
+import models.user.external.{CheckAvailabilityRequest, CreateUserRequest}
 import models.user.internal.{User, UserStatus}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
@@ -174,6 +174,54 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
     val u = user()
     when(repo.insert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest(phone = "+31612345678")).futureValue shouldBe u
+  }
+
+  // ── checkAvailability ────────────────────────────────────────────────────────
+
+  "checkAvailability" should "succeed when email is not taken and no phone is provided" in {
+    when(repo.getByEmail("john@example.com")).thenReturn(Future.successful(None))
+    service.checkAvailability(
+      CheckAvailabilityRequest.builder().email("john@example.com").build()
+    ).futureValue shouldBe ()
+  }
+
+  it should "succeed when email is not taken and phone is not taken" in {
+    when(repo.getByEmail("john@example.com")).thenReturn(Future.successful(None))
+    when(repo.getByPhone("+31612345678")).thenReturn(Future.successful(None))
+    service.checkAvailability(
+      CheckAvailabilityRequest.builder()
+        .email("john@example.com")
+        .phoneNumber("+31612345678")
+        .build()
+    ).futureValue shouldBe ()
+  }
+
+  it should "fail with 'Email already in use' when email is taken" in {
+    when(repo.getByEmail("taken@example.com")).thenReturn(Future.successful(Some(user())))
+    service.checkAvailability(
+      CheckAvailabilityRequest.builder().email("taken@example.com").build()
+    ).failed.futureValue.getMessage should include("Email already in use")
+  }
+
+  it should "fail with 'Phone number already in use' when phone is taken" in {
+    when(repo.getByEmail("john@example.com")).thenReturn(Future.successful(None))
+    when(repo.getByPhone("+31612345678")).thenReturn(Future.successful(Some(user())))
+    service.checkAvailability(
+      CheckAvailabilityRequest.builder()
+        .email("john@example.com")
+        .phoneNumber("+31612345678")
+        .build()
+    ).failed.futureValue.getMessage should include("Phone number already in use")
+  }
+
+  it should "fail with 'Invalid phone number' for a malformed phone" in {
+    when(repo.getByEmail("john@example.com")).thenReturn(Future.successful(None))
+    service.checkAvailability(
+      CheckAvailabilityRequest.builder()
+        .email("john@example.com")
+        .phoneNumber("not-a-phone")
+        .build()
+    ).failed.futureValue.getMessage should include("Invalid phone number")
   }
 
   // ── getUser ───────────────────────────────────────────────────────────────────

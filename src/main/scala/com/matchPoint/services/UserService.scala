@@ -4,7 +4,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat
 import com.matchPoint.helpers.JwtService
 import com.matchPoint.repositories.UserRepository
-import models.user.external.{CreateUserRequest, LoginRequest, LoginResponse}
+import models.user.external.{CheckAvailabilityRequest, CreateUserRequest, LoginRequest, LoginResponse}
 import models.user.internal.{User, UserStatus}
 import org.apache.commons.validator.routines.EmailValidator
 import org.slf4j.LoggerFactory
@@ -116,6 +116,30 @@ class UserService(userRepo: UserRepository, jwtService: JwtService)(implicit ec:
       .playtomicProfileUrl(trimOpt(request.getPlaytomicProfileUrl).orNull)
       .status(UserStatus.ACTIVE)
       .build()
+
+  def checkAvailability(request: CheckAvailabilityRequest): Future[Unit] = {
+    val email    = request.getEmail.trim.toLowerCase
+    val phoneOpt = trimOpt(request.getPhoneNumber)
+
+    userRepo.getByEmail(email).flatMap {
+      case Some(_) => Future.failed(new IllegalArgumentException("Email already in use"))
+      case None =>
+        phoneOpt match {
+          case None => Future.successful(())
+          case Some(phone) =>
+            val region = trimOpt(request.getCountry).map(_.toUpperCase).orNull
+            val normalized = try {
+              phoneUtil.format(phoneUtil.parse(phone, region), PhoneNumberFormat.E164)
+            } catch {
+              case _: Exception => throw new IllegalArgumentException("Invalid phone number")
+            }
+            userRepo.getByPhone(normalized).map {
+              case Some(_) => throw new IllegalArgumentException("Phone number already in use")
+              case None    => ()
+            }
+        }
+    }
+  }
 
   def getUser(userId: UUID): Future[Option[User]] =
     userRepo.getById(userId)

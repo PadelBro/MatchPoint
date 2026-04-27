@@ -49,7 +49,6 @@ export function RegisterPage() {
     const { setUser } = useUser();
 
     const [step, setStep] = useState<1 | 2>(1);
-    const [createdUserId, setCreatedUserId] = useState<string>("");
 
     // Step 1 state
     const [userForm, setUserForm] = useState<UserForm>({
@@ -79,7 +78,11 @@ export function RegisterPage() {
         const e: UserErrors = {};
         if (!userForm.firstName.trim()) e.firstName = "Required";
         if (!userForm.lastName.trim()) e.lastName = "Required";
-        if (!userForm.email.trim()) e.email = "Required";
+        if (!userForm.email.trim()) {
+            e.email = "Required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userForm.email.trim())) {
+            e.email = "Invalid email address";
+        }
         if (!userForm.password) e.password = "Required";
         return e;
     };
@@ -92,47 +95,23 @@ export function RegisterPage() {
 
         setUserSubmitting(true);
         try {
-            const body: Record<string, string> = {
-                firstName: userForm.firstName.trim(),
-                lastName: userForm.lastName.trim(),
-                email: userForm.email.trim().toLowerCase(),
-                password: userForm.password,
-            };
-            if (userForm.phoneNumber.trim())       body.phoneNumber = userForm.phoneNumber.trim();
-            if (userForm.dateOfBirth)              body.dateOfBirth = userForm.dateOfBirth;
-            if (userForm.city.trim())              body.city = userForm.city.trim();
-            if (userForm.country.trim())           body.country = userForm.country.trim().toUpperCase();
-            if (userForm.profilePictureUrl.trim()) body.profilePictureUrl = userForm.profilePictureUrl.trim();
-            if (userForm.playtomicProfileUrl.trim()) body.playtomicProfileUrl = userForm.playtomicProfileUrl.trim();
+            const checkBody: Record<string, string> = { email: userForm.email.trim().toLowerCase() };
+            if (userForm.phoneNumber.trim()) checkBody.phoneNumber = userForm.phoneNumber.trim();
+            if (userForm.country.trim())     checkBody.country = userForm.country.trim().toUpperCase();
 
-            const res = await fetch("/api/users", {
+            const res = await fetch("/api/users/check", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
+                body: JSON.stringify(checkBody),
             });
-
             if (!res.ok) {
                 const msg = await res.text().catch(() => "");
-                setUserErrors({ form: msg || "Failed to create account" });
+                setUserErrors({ form: msg || "Failed to check availability" });
                 return;
             }
-
-            const user = await res.json();
-            setCreatedUserId(user.id);
-
-            const loginRes = await fetch("/api/users/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: userForm.email.trim().toLowerCase(), password: userForm.password }),
-            });
-            if (loginRes.ok) {
-                const session = await loginRes.json();
-                setUser({ id: session.id, firstName: session.firstName, lastName: session.lastName, token: session.token });
-            }
-
             setStep(2);
         } catch {
-            setUserErrors({ form: "Failed to submit" });
+            setUserErrors({ form: "Failed to check availability" });
         } finally {
             setUserSubmitting(false);
         }
@@ -163,25 +142,65 @@ export function RegisterPage() {
 
         setPlayerSubmitting(true);
         try {
-            const res = await fetch("/api/players", {
+            // Build user body
+            const userBody: Record<string, string> = {
+                firstName: userForm.firstName.trim(),
+                lastName: userForm.lastName.trim(),
+                email: userForm.email.trim().toLowerCase(),
+                password: userForm.password,
+            };
+            if (userForm.phoneNumber.trim())         userBody.phoneNumber = userForm.phoneNumber.trim();
+            if (userForm.dateOfBirth)                userBody.dateOfBirth = userForm.dateOfBirth;
+            if (userForm.city.trim())                userBody.city = userForm.city.trim();
+            if (userForm.country.trim())             userBody.country = userForm.country.trim().toUpperCase();
+            if (userForm.profilePictureUrl.trim())   userBody.profilePictureUrl = userForm.profilePictureUrl.trim();
+            if (userForm.playtomicProfileUrl.trim()) userBody.playtomicProfileUrl = userForm.playtomicProfileUrl.trim();
+
+            // Create user
+            const userRes = await fetch("/api/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(userBody),
+            });
+            if (!userRes.ok) {
+                const msg = await userRes.text().catch(() => "");
+                setUserErrors({ form: msg || "Failed to create account" });
+                setStep(1);
+                return;
+            }
+            const createdUser = await userRes.json();
+
+            // Login
+            const loginRes = await fetch("/api/users/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: userForm.email.trim().toLowerCase(), password: userForm.password }),
+            });
+            if (!loginRes.ok) {
+                setPlayerErrors({ form: "Account created but login failed. Please log in manually." });
+                return;
+            }
+            const session = await loginRes.json();
+            setUser({ id: session.id, firstName: session.firstName, lastName: session.lastName, token: session.token });
+
+            // Create player
+            const playerRes = await fetch("/api/players", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    userId: createdUserId,
+                    userId: createdUser.id,
                     rating: playerForm.rating,
                     gender: playerForm.gender,
                     hand: playerForm.hand,
                     courtSide: playerForm.courtSide,
                 }),
             });
-
-            if (!res.ok) {
-                const msg = await res.text().catch(() => "");
+            if (!playerRes.ok) {
+                const msg = await playerRes.text().catch(() => "");
                 setPlayerErrors({ form: msg || "Failed to create player profile" });
                 return;
             }
-
-            const player = await res.json();
+            const player = await playerRes.json();
             navigate(`/players/${player.id}`);
         } catch {
             setPlayerErrors({ form: "Failed to submit" });
@@ -310,7 +329,7 @@ export function RegisterPage() {
 
                             <button type="submit" disabled={userSubmitting}
                                     className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold text-lg py-4 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide">
-                                {userSubmitting ? "Creating..." : "Next →"}
+                                {userSubmitting ? "Checking..." : "Next →"}
                             </button>
                         </form>
                     )}

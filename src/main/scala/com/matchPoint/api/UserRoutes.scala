@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
 import com.matchPoint.helpers.JacksonSupport._
 import com.matchPoint.services.UserService
-import models.user.external.{CreateUserRequest, LoginRequest}
+import models.user.external.{CheckAvailabilityRequest, CreateUserRequest, LoginRequest}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -32,6 +32,14 @@ class UserRoutes(service: UserService)(implicit ec: ExecutionContext) extends Di
                 entity(as[LoginRequest]) { request =>
                   onSuccess(service.login(request)) { response =>
                     complete(response)
+                  }
+                }
+              },
+              path("check") {
+                entity(as[CheckAvailabilityRequest]) { request =>
+                  onComplete(service.checkAvailability(request)) {
+                    case scala.util.Success(_)  => complete(StatusCodes.OK)
+                    case scala.util.Failure(ex) => throw ex
                   }
                 }
               }
