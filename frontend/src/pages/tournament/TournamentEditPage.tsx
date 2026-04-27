@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {Tournament} from "../../model/tournament/Tournament";
 import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 import { useUser } from "../../context/UserContext";
+import { getErrorMessage } from "../../utils/apiError";
 
 type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'>, string>>;
 
@@ -125,8 +126,7 @@ export function TournamentEditPage() {
             });
 
             if (!res.ok) {
-                const body = await res.text();
-                throw new Error(body || "Update failed");
+                throw new Error(await getErrorMessage(res, "Update failed"));
             }
 
             navigate(`/tournaments/${tournamentId}`);
