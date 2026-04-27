@@ -138,3 +138,11 @@ class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
 - On mount, `runSearch(loadFilters())` fires automatically so the list populates without clicking Search.
 - Filter state uses `Filters` interface from `frontend/src/model/tournament/Filters.ts` (all fields nullable except `offset`/`limit`).
 - `runSearch(f: Filters)` accepts filters as a parameter (not from state closure) to allow calling from `useEffect` and `handleReset` without stale-closure issues.
+
+## PR Descriptions
+
+Structure: title (`MP-XX: short description`), then sections: **Problem**, **Solution**, optionally grouped sub-sections (Backend / Frontend / Tests), and **Before / After**.
+
+- Use bullet lists throughout — no tables
+- Before / After items follow the pattern: `- <scenario>: was <old behaviour>, now <new behaviour>`
+- Keep it concise: one sentence per bullet, no filler words
