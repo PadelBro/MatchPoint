@@ -2,7 +2,7 @@ package com.matchPoint.services
 
 import com.matchPoint.helpers.JwtService
 import com.matchPoint.repositories.UserRepository
-import models.user.external.{CheckAvailabilityRequest, CreateUserRequest}
+import models.user.external.{CheckAvailabilityRequest, CreateUserRequest, UpdateUserRequest}
 import models.user.internal.{User, UserStatus}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
@@ -222,6 +222,129 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
         .phoneNumber("not-a-phone")
         .build()
     ).failed.futureValue.getMessage should include("Invalid phone number")
+  }
+
+  // ── updateUser ───────────────────────────────────────────────────────────────
+
+  private def validUpdateRequest(
+    firstName:          String    = "John",
+    lastName:           String    = "Doe",
+    email:              String    = "john@example.com",
+    phone:              String    = null,
+    dob:                LocalDate = null,
+    city:               String    = null,
+    country:            String    = null,
+    playtomicProfileUrl: String   = null,
+  ) =
+    UpdateUserRequest.builder()
+      .firstName(firstName)
+      .lastName(lastName)
+      .email(email)
+      .phoneNumber(phone)
+      .dateOfBirth(dob)
+      .city(city)
+      .country(country)
+      .playtomicProfileUrl(playtomicProfileUrl)
+      .build()
+
+  "updateUser" should "update the user when no fields change" in {
+    val id = UUID.randomUUID()
+    val existing = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("john@example.com")
+      .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
+    val updated = existing
+    when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
+    when(repo.update(any())).thenReturn(Future.successful(updated))
+    service.updateUser(id, validUpdateRequest()).futureValue shouldBe updated
+  }
+
+  it should "allow email change when new email is not taken" in {
+    val id = UUID.randomUUID()
+    val existing = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("old@example.com")
+      .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
+    val updatedUser = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("new@example.com")
+      .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
+    when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
+    when(repo.getByEmail("new@example.com")).thenReturn(Future.successful(None))
+    when(repo.update(any())).thenReturn(Future.successful(updatedUser))
+    service.updateUser(id, validUpdateRequest(email = "new@example.com")).futureValue shouldBe updatedUser
+  }
+
+  it should "fail with 'Email already in use' when new email is taken" in {
+    val id = UUID.randomUUID()
+    val existing = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("old@example.com")
+      .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
+    when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
+    when(repo.getByEmail("taken@example.com")).thenReturn(Future.successful(Some(user())))
+    service.updateUser(id, validUpdateRequest(email = "taken@example.com"))
+      .failed.futureValue.getMessage should include("Email already in use")
+  }
+
+  it should "allow phone change when new phone is not taken" in {
+    val id = UUID.randomUUID()
+    val existing = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("john@example.com")
+      .passwordHash("$2a$10$hashed").phoneNumber("+31600000000").status(UserStatus.ACTIVE).build()
+    val updatedUser = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("john@example.com")
+      .passwordHash("$2a$10$hashed").phoneNumber("+31612345678").status(UserStatus.ACTIVE).build()
+    when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
+    when(repo.getByPhone("+31612345678")).thenReturn(Future.successful(None))
+    when(repo.update(any())).thenReturn(Future.successful(updatedUser))
+    service.updateUser(id, validUpdateRequest(phone = "+31612345678")).futureValue shouldBe updatedUser
+  }
+
+  it should "fail with 'Phone number already in use' when new phone is taken" in {
+    val id = UUID.randomUUID()
+    val existing = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("john@example.com")
+      .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
+    when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
+    when(repo.getByPhone("+31612345678")).thenReturn(Future.successful(Some(user())))
+    service.updateUser(id, validUpdateRequest(phone = "+31612345678"))
+      .failed.futureValue.getMessage should include("Phone number already in use")
+  }
+
+  it should "fail with 'User not found' when user does not exist" in {
+    val id = UUID.randomUUID()
+    when(repo.getById(id)).thenReturn(Future.successful(None))
+    service.updateUser(id, validUpdateRequest())
+      .failed.futureValue.getMessage should include("User not found")
+  }
+
+  it should "throw synchronously for an invalid email" in {
+    val id = UUID.randomUUID()
+    intercept[IllegalArgumentException] {
+      service.updateUser(id, validUpdateRequest(email = "not-an-email"))
+    }.getMessage should include("Invalid email")
+  }
+
+  it should "throw synchronously when first name is blank" in {
+    val id = UUID.randomUUID()
+    intercept[IllegalArgumentException] {
+      service.updateUser(id, validUpdateRequest(firstName = "  "))
+    }.getMessage should include("First name")
+  }
+
+  it should "throw synchronously when date of birth is in the future" in {
+    val id = UUID.randomUUID()
+    intercept[IllegalArgumentException] {
+      service.updateUser(id, validUpdateRequest(dob = LocalDate.now().plusDays(1)))
+    }.getMessage should include("Date of birth")
+  }
+
+  it should "fail with 'Email already in use' on DuplicateKeyException from repo" in {
+    val id = UUID.randomUUID()
+    val existing = User.builder()
+      .id(id).firstName("John").lastName("Doe").email("john@example.com")
+      .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
+    when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
+    when(repo.update(any())).thenReturn(Future.failed(new DuplicateKeyException("dup")))
+    service.updateUser(id, validUpdateRequest())
+      .failed.futureValue.getMessage should include("Email already in use")
   }
 
   // ── getUser ───────────────────────────────────────────────────────────────────

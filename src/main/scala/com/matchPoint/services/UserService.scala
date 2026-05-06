@@ -4,7 +4,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.PhoneNumberUtil.PhoneNumberFormat
 import com.matchPoint.helpers.JwtService
 import com.matchPoint.repositories.UserRepository
-import models.user.external.{CheckAvailabilityRequest, CreateUserRequest, LoginRequest, LoginResponse}
+import models.user.external.{CheckAvailabilityRequest, CreateUserRequest, LoginRequest, LoginResponse, UpdateUserRequest}
 import models.user.internal.{User, UserStatus}
 import org.apache.commons.validator.routines.EmailValidator
 import org.slf4j.LoggerFactory
@@ -138,6 +138,117 @@ class UserService(userRepo: UserRepository, jwtService: JwtService)(implicit ec:
               case None    => ()
             }
         }
+    }
+  }
+
+  def updateUser(userId: UUID, request: UpdateUserRequest): Future[User] = {
+    logger.info("user_update_attempt id={}", userId)
+    validateUpdate(request)
+
+    val newEmail = request.getEmail.trim.toLowerCase
+    val newPhone = trimOpt(request.getPhoneNumber).map { phone =>
+      val region = trimOpt(request.getCountry).map(_.toUpperCase).orNull
+      try phoneUtil.format(phoneUtil.parse(phone, region), PhoneNumberFormat.E164)
+      catch { case _: Exception => throw new IllegalArgumentException("Invalid phone number") }
+    }
+
+    userRepo.getById(userId).flatMap {
+      case None => Future.failed(new IllegalArgumentException("User not found"))
+      case Some(existing) =>
+        val emailCheck =
+          if (newEmail != existing.getEmail)
+            userRepo.getByEmail(newEmail).flatMap {
+              case Some(_) => Future.failed(new IllegalArgumentException("Email already in use"))
+              case None    => Future.successful(())
+            }
+          else Future.successful(())
+
+        emailCheck.flatMap { _ =>
+          val phoneCheck =
+            if (newPhone.isDefined && newPhone != Option(existing.getPhoneNumber))
+              userRepo.getByPhone(newPhone.get).flatMap {
+                case Some(_) => Future.failed(new IllegalArgumentException("Phone number already in use"))
+                case None    => Future.successful(())
+              }
+            else Future.successful(())
+
+          phoneCheck.flatMap { _ =>
+            val updated = User.builder()
+              .id(existing.getId)
+              .firstName(Normalizer.normalize(request.getFirstName.trim, Normalizer.Form.NFC))
+              .lastName(Normalizer.normalize(request.getLastName.trim, Normalizer.Form.NFC))
+              .email(newEmail)
+              .passwordHash(existing.getPasswordHash)
+              .phoneNumber(newPhone.orNull)
+              .dateOfBirth(request.getDateOfBirth)
+              .city(trimOpt(request.getCity).orNull)
+              .country(trimOpt(request.getCountry).map(_.toUpperCase).orNull)
+              .profilePictureUrl(existing.getProfilePictureUrl)
+              .playtomicProfileUrl(trimOpt(request.getPlaytomicProfileUrl).orNull)
+              .status(existing.getStatus)
+              .build()
+
+            userRepo.update(updated).map { u =>
+              logger.info("user_updated id={}", u.getId)
+              u
+            }.recoverWith {
+              case _: DuplicateKeyException =>
+                Future.failed(new IllegalArgumentException("Email already in use"))
+              case ex =>
+                logger.error("user_update_failed id={} error={}", userId, ex.getMessage)
+                Future.failed(ex)
+            }
+          }
+        }
+    }
+  }
+
+  private def validateUpdate(request: UpdateUserRequest): Unit = {
+    if (Option(request.getFirstName).map(_.trim).forall(_.isEmpty))
+      throw new IllegalArgumentException("First name is required")
+
+    if (Normalizer.normalize(request.getFirstName.trim, Normalizer.Form.NFC).length > 100)
+      throw new IllegalArgumentException("First name must be at most 100 characters")
+
+    if (Option(request.getLastName).map(_.trim).forall(_.isEmpty))
+      throw new IllegalArgumentException("Last name is required")
+
+    if (Normalizer.normalize(request.getLastName.trim, Normalizer.Form.NFC).length > 100)
+      throw new IllegalArgumentException("Last name must be at most 100 characters")
+
+    if (Option(request.getEmail).map(_.trim).forall(_.isEmpty))
+      throw new IllegalArgumentException("Email is required")
+
+    if (!EmailValidator.getInstance().isValid(request.getEmail.trim.toLowerCase))
+      throw new IllegalArgumentException("Invalid email address")
+
+    Option(request.getDateOfBirth).foreach { dob =>
+      if (dob.isAfter(LocalDate.now()))
+        throw new IllegalArgumentException("Date of birth cannot be in the future")
+    }
+
+    trimOpt(request.getCity).foreach { city =>
+      if (city.length > 100)
+        throw new IllegalArgumentException("City must be at most 100 characters")
+    }
+
+    trimOpt(request.getCountry).map(_.toUpperCase).foreach { country =>
+      if (!Locale.getISOCountries.contains(country))
+        throw new IllegalArgumentException(s"Invalid country code: $country")
+    }
+
+    trimOpt(request.getPlaytomicProfileUrl).foreach((url: String) => validateUrl(url, "playtomic.com", "Playtomic profile URL"))
+
+    trimOpt(request.getPhoneNumber).foreach { phone =>
+      val region = trimOpt(request.getCountry).map(_.toUpperCase).orNull
+      try {
+        val parsed = phoneUtil.parse(phone, region)
+        if (!phoneUtil.isValidNumber(parsed))
+          throw new IllegalArgumentException("Invalid phone number")
+      } catch {
+        case e: IllegalArgumentException => throw e
+        case _: Exception                => throw new IllegalArgumentException("Invalid phone number")
+      }
     }
   }
 

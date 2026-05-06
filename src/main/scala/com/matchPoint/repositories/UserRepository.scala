@@ -69,4 +69,35 @@ class UserRepository(
       "SELECT * FROM app_user WHERE phone_number = :phone",
       Map("phone" -> phone)
     )
+
+  def update(user: User): Future[User] =
+    jdbcTemplate.querySingle[User](
+      """
+        |UPDATE app_user SET
+        |  first_name            = :firstName,
+        |  last_name             = :lastName,
+        |  email                 = :email,
+        |  phone_number          = :phoneNumber,
+        |  date_of_birth         = :dateOfBirth,
+        |  city                  = :city,
+        |  country               = :country,
+        |  profile_picture_url   = :profilePictureUrl,
+        |  playtomic_profile_url = :playtomicProfileUrl,
+        |  updated_at            = EXTRACT(EPOCH FROM NOW())::BIGINT * 1000
+        |WHERE id = :id
+        |RETURNING *
+        |""".stripMargin,
+      Map(
+        "id"                  -> user.getId,
+        "firstName"           -> user.getFirstName,
+        "lastName"            -> user.getLastName,
+        "email"               -> user.getEmail,
+        "phoneNumber"         -> user.getPhoneNumber,
+        "dateOfBirth"         -> Option(user.getDateOfBirth).map(Date.valueOf).orNull,
+        "city"                -> user.getCity,
+        "country"             -> user.getCountry,
+        "profilePictureUrl"   -> user.getProfilePictureUrl,
+        "playtomicProfileUrl" -> user.getPlaytomicProfileUrl
+      )
+    )
 }
