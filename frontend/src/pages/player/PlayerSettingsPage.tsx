@@ -75,9 +75,7 @@ export function PlayerSettingsPage() {
                     lastName: u.lastName ?? "",
                     email: u.email ?? "",
                     phoneNumber: u.phoneNumber ?? "",
-                    dateOfBirth: u.dateOfBirth
-                        ? `${u.dateOfBirth[0]}-${String(u.dateOfBirth[1]).padStart(2, "0")}-${String(u.dateOfBirth[2]).padStart(2, "0")}`
-                        : "",
+                    dateOfBirth: u.dateOfBirth ?? "",
                     city: u.city ?? "",
                     country: u.country ?? "",
                     playtomicProfileUrl: u.playtomicProfileUrl ?? "",
@@ -226,20 +224,24 @@ export function PlayerSettingsPage() {
              style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
             <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-emerald-900/60" />
 
-            <div className="relative z-10 px-4 py-12">
-                <div className="max-w-lg mx-auto space-y-6">
+            <div className="relative z-10 px-6 py-8 max-w-7xl mx-auto">
 
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
                     <Link to="/"
-                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-md text-white font-semibold rounded-lg hover:bg-white/30 transition-all duration-300 border border-white/30 w-fit">
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 backdrop-blur-md text-white font-semibold rounded-lg hover:bg-white/30 transition-all duration-300 border border-white/30">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                         Back
                     </Link>
-
                     <h1 className="text-2xl font-black text-white">
                         {user.firstName} {user.lastName}
                     </h1>
+                </div>
+
+                {/* Two-column layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
                     {/* ── Account Info ── */}
                     <div className="backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8">
@@ -413,3 +415,4 @@ export function PlayerSettingsPage() {
         </div>
     );
 }
+
