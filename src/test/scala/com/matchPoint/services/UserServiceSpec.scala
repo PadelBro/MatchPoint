@@ -65,12 +65,12 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
 
   "createUser" should "delegate to repo and return the created user" in {
     val u = user()
-    when(repo.insert(any())).thenReturn(Future.successful(u))
+    when(repo.upsert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest()).futureValue shouldBe u
   }
 
   it should "fail with 'Email already in use' on DuplicateKeyException" in {
-    when(repo.insert(any())).thenReturn(Future.failed(new DuplicateKeyException("dup")))
+    when(repo.upsert(any())).thenReturn(Future.failed(new DuplicateKeyException("dup")))
     service.createUser(validRequest()).failed.futureValue.getMessage should include("Email already in use")
   }
 
@@ -106,7 +106,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
 
   it should "accept today as a valid date of birth" in {
     val u = user()
-    when(repo.insert(any())).thenReturn(Future.successful(u))
+    when(repo.upsert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest(dob = LocalDate.now())).futureValue shouldBe u
   }
 
@@ -128,7 +128,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
 
   it should "accept a valid ISO country code" in {
     val u = user()
-    when(repo.insert(any())).thenReturn(Future.successful(u))
+    when(repo.upsert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest(country = "NL")).futureValue shouldBe u
   }
 
@@ -142,7 +142,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
 
   it should "accept a valid cloudinary profile picture URL" in {
     val u = user()
-    when(repo.insert(any())).thenReturn(Future.successful(u))
+    when(repo.upsert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest(profilePic = "https://res.cloudinary.com/demo/image/upload/sample.jpg"))
       .futureValue shouldBe u
   }
@@ -157,7 +157,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
 
   it should "accept a valid playtomic.com URL" in {
     val u = user()
-    when(repo.insert(any())).thenReturn(Future.successful(u))
+    when(repo.upsert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest(playtomic = "https://playtomic.com/player/123"))
       .futureValue shouldBe u
   }
@@ -172,7 +172,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
 
   it should "accept a valid E.164 phone number" in {
     val u = user()
-    when(repo.insert(any())).thenReturn(Future.successful(u))
+    when(repo.upsert(any())).thenReturn(Future.successful(u))
     service.createUser(validRequest(phone = "+31612345678")).futureValue shouldBe u
   }
 
@@ -254,7 +254,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
       .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
     val updated = existing
     when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
-    when(repo.update(any())).thenReturn(Future.successful(updated))
+    when(repo.upsert(any())).thenReturn(Future.successful(updated))
     service.updateUser(id, validUpdateRequest()).futureValue shouldBe updated
   }
 
@@ -268,7 +268,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
       .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
     when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
     when(repo.getByEmail("new@example.com")).thenReturn(Future.successful(None))
-    when(repo.update(any())).thenReturn(Future.successful(updatedUser))
+    when(repo.upsert(any())).thenReturn(Future.successful(updatedUser))
     service.updateUser(id, validUpdateRequest(email = "new@example.com")).futureValue shouldBe updatedUser
   }
 
@@ -293,7 +293,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
       .passwordHash("$2a$10$hashed").phoneNumber("+31612345678").status(UserStatus.ACTIVE).build()
     when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
     when(repo.getByPhone("+31612345678")).thenReturn(Future.successful(None))
-    when(repo.update(any())).thenReturn(Future.successful(updatedUser))
+    when(repo.upsert(any())).thenReturn(Future.successful(updatedUser))
     service.updateUser(id, validUpdateRequest(phone = "+31612345678")).futureValue shouldBe updatedUser
   }
 
@@ -342,7 +342,7 @@ class UserServiceSpec extends AnyFlatSpec with Matchers with ScalaFutures with B
       .id(id).firstName("John").lastName("Doe").email("john@example.com")
       .passwordHash("$2a$10$hashed").status(UserStatus.ACTIVE).build()
     when(repo.getById(id)).thenReturn(Future.successful(Some(existing)))
-    when(repo.update(any())).thenReturn(Future.failed(new DuplicateKeyException("dup")))
+    when(repo.upsert(any())).thenReturn(Future.failed(new DuplicateKeyException("dup")))
     service.updateUser(id, validUpdateRequest())
       .failed.futureValue.getMessage should include("Email already in use")
   }

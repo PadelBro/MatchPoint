@@ -140,7 +140,7 @@ export function PlayerSettingsPage() {
             if (accountForm.playtomicProfileUrl.trim()) body.playtomicProfileUrl = accountForm.playtomicProfileUrl.trim();
 
             const res = await fetch(`/api/users/${user!.id}`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${user!.token}`,

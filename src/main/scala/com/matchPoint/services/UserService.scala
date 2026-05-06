@@ -33,7 +33,7 @@ class UserService(userRepo: UserRepository, jwtService: JwtService)(implicit ec:
     logger.info("user_create_attempt email={}", request.getEmail.trim.toLowerCase)
     validate(request)
     val user = buildFromRequest(request)
-    userRepo.insert(user).map { created =>
+    userRepo.upsert(user).map { created =>
       logger.info("user_created id={} email={}", created.getId, created.getEmail)
       created
     }.recoverWith {
@@ -188,7 +188,7 @@ class UserService(userRepo: UserRepository, jwtService: JwtService)(implicit ec:
               .status(existing.getStatus)
               .build()
 
-            userRepo.update(updated).map { u =>
+            userRepo.upsert(updated).map { u =>
               logger.info("user_updated id={}", u.getId)
               u
             }.recoverWith {

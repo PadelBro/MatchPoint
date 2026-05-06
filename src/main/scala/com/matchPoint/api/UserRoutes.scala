@@ -43,6 +43,18 @@ class UserRoutes(service: UserService, authDirective: AuthDirective)(implicit ec
                     case scala.util.Failure(ex) => throw ex
                   }
                 }
+              },
+              path(JavaUUID) { targetUserId =>
+                authDirective.authenticate { authenticatedUserId =>
+                  if (authenticatedUserId != targetUserId)
+                    complete(StatusCodes.Forbidden, ApiError("FORBIDDEN", "Cannot update another user's account"))
+                  else
+                    entity(as[UpdateUserRequest]) { request =>
+                      onSuccess(service.updateUser(targetUserId, request)) { updated =>
+                        complete(StatusCodes.OK, updated)
+                      }
+                    }
+                }
               }
             )
           },
@@ -51,20 +63,6 @@ class UserRoutes(service: UserService, authDirective: AuthDirective)(implicit ec
               onSuccess(service.getUser(userId)) {
                 case Some(user) => complete(user)
                 case None       => complete(StatusCodes.NotFound)
-              }
-            }
-          },
-          put {
-            path(JavaUUID) { targetUserId =>
-              authDirective.authenticate { authenticatedUserId =>
-                if (authenticatedUserId != targetUserId)
-                  complete(StatusCodes.Forbidden, ApiError("FORBIDDEN", "Cannot update another user's account"))
-                else
-                  entity(as[UpdateUserRequest]) { request =>
-                    onSuccess(service.updateUser(targetUserId, request)) { updated =>
-                      complete(StatusCodes.OK, updated)
-                    }
-                  }
               }
             }
           }

@@ -117,6 +117,10 @@ class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
 
 **Akka HTTP query parameter UUID gotcha:** `parameter("foo".as[java.util.UUID])` does **not** compile — Akka HTTP has no built-in `Unmarshaller[String, UUID]`. Always use `parameter("foo")` (String) and call `java.util.UUID.fromString(str)` manually. `ApiExceptionHandler` already maps `IllegalArgumentException` → 400, so invalid UUIDs are handled gracefully.
 
+**HTTP method convention:** Use only `GET`, `POST`, and `DELETE`. Never add `PUT` or `PATCH` routes. Updates are handled by `POST /:id` (same prefix as create, distinguished by path segment).
+
+**Upsert over insert+update:** Repositories use a single `upsert` method with `ON CONFLICT (id) DO UPDATE SET` rather than separate `insert` and `update` methods. Services call `repo.upsert` for both create and update paths. Immutable fields (e.g. `password_hash`, `status`) are excluded from the `DO UPDATE SET` clause so they are never overwritten.
+
 **Player lookup by userId:** `GET /api/players?userId=<uuid>` returns the player for that user (or 404). Use this from the frontend when only the session user ID is available (e.g., settings page). The session stores `{ id, firstName, lastName, token }` where `id` is the **user** UUID, not the player UUID.
 
 **Registration flow** (`/register` → `RegisterPage.tsx`) is 2-step:

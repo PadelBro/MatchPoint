@@ -19,10 +19,9 @@ class UserRepository(
   mapper: ObjectMapper
 )(implicit val ec: ExecutionContext) extends JdbcWrapperTrait {
 
-  implicit private val userRowMapper: JacksonRowMapper[User] =
-    new JacksonRowMapper(classOf[User], mapper)
+  implicit private val userRowMapper: JacksonRowMapper[User] = new JacksonRowMapper(classOf[User], mapper)
 
-  def insert(user: User): Future[User] =
+  def upsert(user: User): Future[User] =
     jdbcTemplate.querySingle[User](
       """
         |INSERT INTO app_user (
@@ -34,6 +33,17 @@ class UserRepository(
         |  :phoneNumber, :dateOfBirth, :city, :country,
         |  :profilePictureUrl, :playtomicProfileUrl, :status
         |)
+        |ON CONFLICT (id) DO UPDATE SET
+        |  first_name            = EXCLUDED.first_name,
+        |  last_name             = EXCLUDED.last_name,
+        |  email                 = EXCLUDED.email,
+        |  phone_number          = EXCLUDED.phone_number,
+        |  date_of_birth         = EXCLUDED.date_of_birth,
+        |  city                  = EXCLUDED.city,
+        |  country               = EXCLUDED.country,
+        |  profile_picture_url   = EXCLUDED.profile_picture_url,
+        |  playtomic_profile_url = EXCLUDED.playtomic_profile_url,
+        |  updated_at            = EXTRACT(EPOCH FROM NOW())::BIGINT * 1000
         |RETURNING *
         |""".stripMargin,
       Map(
@@ -70,34 +80,4 @@ class UserRepository(
       Map("phone" -> phone)
     )
 
-  def update(user: User): Future[User] =
-    jdbcTemplate.querySingle[User](
-      """
-        |UPDATE app_user SET
-        |  first_name            = :firstName,
-        |  last_name             = :lastName,
-        |  email                 = :email,
-        |  phone_number          = :phoneNumber,
-        |  date_of_birth         = :dateOfBirth,
-        |  city                  = :city,
-        |  country               = :country,
-        |  profile_picture_url   = :profilePictureUrl,
-        |  playtomic_profile_url = :playtomicProfileUrl,
-        |  updated_at            = EXTRACT(EPOCH FROM NOW())::BIGINT * 1000
-        |WHERE id = :id
-        |RETURNING *
-        |""".stripMargin,
-      Map(
-        "id"                  -> user.getId,
-        "firstName"           -> user.getFirstName,
-        "lastName"            -> user.getLastName,
-        "email"               -> user.getEmail,
-        "phoneNumber"         -> user.getPhoneNumber,
-        "dateOfBirth"         -> Option(user.getDateOfBirth).map(Date.valueOf).orNull,
-        "city"                -> user.getCity,
-        "country"             -> user.getCountry,
-        "profilePictureUrl"   -> user.getProfilePictureUrl,
-        "playtomicProfileUrl" -> user.getPlaytomicProfileUrl
-      )
-    )
 }
