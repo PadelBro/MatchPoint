@@ -4,12 +4,14 @@ import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 import {Tournament} from "../../model/tournament/Tournament";
 import { useUser } from "../../context/UserContext";
 import { getErrorMessage } from "../../utils/apiError";
+import { useAuthFetch } from "../../hooks/useAuthFetch";
 
 type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'> | "form", string>>;
 
 export function TournamentCreatePage() {
     const navigate = useNavigate();
     const { user } = useUser();
+    const authFetch = useAuthFetch();
 
 
     const [form, setForm] = useState<Omit<Tournament, 'id' | 'organizerIds'>>({
@@ -83,7 +85,7 @@ export function TournamentCreatePage() {
         setSubmitting(true);
 
         try {
-            const res = await fetch("/api/tournaments", {
+            const res = await authFetch("/api/tournaments", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

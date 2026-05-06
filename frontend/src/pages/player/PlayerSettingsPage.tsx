@@ -4,6 +4,7 @@ import { useUser } from "../../context/UserContext";
 import { RATING_OPTIONS } from "../../model/player/RatingOptions";
 import type { Player } from "../../model/player/Player";
 import { getErrorMessage } from "../../utils/apiError";
+import { useAuthFetch } from "../../hooks/useAuthFetch";
 
 type AccountForm = {
     firstName: string;
@@ -39,6 +40,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function PlayerSettingsPage() {
     const { user, setUser } = useUser();
     const navigate = useNavigate();
+    const authFetch = useAuthFetch();
 
     // ── Account section ──────────────────────────────────────────────────────
     const [accountForm, setAccountForm] = useState<AccountForm>({
@@ -62,7 +64,7 @@ export function PlayerSettingsPage() {
         if (!user) { navigate("/login"); return; }
 
         // Fetch user account info
-        fetch(`/api/users/${user.id}`, {
+        authFetch(`/api/users/${user.id}`, {
             headers: { "Authorization": `Bearer ${user.token}` },
         })
             .then(res => res.ok ? res.json() : null)
@@ -139,7 +141,7 @@ export function PlayerSettingsPage() {
             if (accountForm.country.trim())            body.country            = accountForm.country.trim();
             if (accountForm.playtomicProfileUrl.trim()) body.playtomicProfileUrl = accountForm.playtomicProfileUrl.trim();
 
-            const res = await fetch(`/api/users/${user!.id}`, {
+            const res = await authFetch(`/api/users/${user!.id}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -189,7 +191,7 @@ export function PlayerSettingsPage() {
 
         setPlayerSubmitting(true);
         try {
-            const res = await fetch("/api/players", {
+            const res = await authFetch("/api/players", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -4,6 +4,7 @@ import {Tournament} from "../../model/tournament/Tournament";
 import {RATING_OPTIONS} from "../../model/player/RatingOptions";
 import { useUser } from "../../context/UserContext";
 import { getErrorMessage } from "../../utils/apiError";
+import { useAuthFetch } from "../../hooks/useAuthFetch";
 
 type FieldErrors = Partial<Record<keyof Omit<Tournament, 'id'>, string>>;
 
@@ -11,6 +12,7 @@ export function TournamentEditPage() {
     const { tournamentId } = useParams<{ tournamentId: string }>();
     const navigate = useNavigate();
     const { user } = useUser();
+    const authFetch = useAuthFetch();
 
     const [form, setForm] = useState<Omit<Tournament, 'id'> | null>(null);
     const [loading, setLoading] = useState(true);
@@ -104,7 +106,7 @@ export function TournamentEditPage() {
         setError(null);
 
         try {
-            const res = await fetch(`/api/tournaments`, {
+            const res = await authFetch(`/api/tournaments`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
