@@ -61,7 +61,7 @@ export function MainPage() {
 
                         {/* Tagline */}
                         <p className="text-xl md:text-2xl lg:text-3xl text-white/95 font-light mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
-                            Effortlessly organize players and tournaments
+                            Effortlessly organize tournaments and win!
                         </p>
 
                         {/* CTA Buttons */}

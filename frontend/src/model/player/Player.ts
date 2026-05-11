@@ -8,4 +8,6 @@ export interface Player {
     gender: Gender;
     hand: Side;
     courtSide: Side;
+    racketUrl?: string;
+    racketName?: string;
 }

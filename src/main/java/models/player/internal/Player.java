@@ -29,6 +29,10 @@ public class Player {
     @NonNull
     Side courtSide;
 
+    String racketUrl;
+
+    String racketName;
+
     Long createdAt;
 
     Long updatedAt;

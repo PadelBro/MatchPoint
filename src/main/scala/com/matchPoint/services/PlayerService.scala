@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
 
+import java.net.URL
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,7 +17,18 @@ class PlayerService(playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
 
   private val logger = LoggerFactory.getLogger(getClass)
 
+  private def validateRacketUrl(url: String): Unit = {
+    if (url.length > 500)
+      throw new IllegalArgumentException("Racket URL must be at most 500 characters")
+    val host = try new URL(url).getHost catch {
+      case _: Exception => throw new IllegalArgumentException("Racket URL is not a valid URL")
+    }
+    if (!host.equals("cloudinary.com") && !host.endsWith(".cloudinary.com"))
+      throw new IllegalArgumentException("Racket URL must be a cloudinary.com URL")
+  }
+
   def upsertPlayer(playerRequest: UpsertPlayerRequest): Future[Player] = {
+    Option(playerRequest.getRacketUrl).filter(_.trim.nonEmpty).foreach(validateRacketUrl)
     playerRepo.upsert(buildFromRequest(playerRequest)).map { player =>
       logger.info(
         "player_upserted id={} userId={} rating={} gender={} hand={} courtSide={}",
@@ -51,6 +63,8 @@ class PlayerService(playerRepo: PlayerRepository)(implicit ec: ExecutionContext)
       .hand(playerRequest.getHand)
       .gender(playerRequest.getGender)
       .courtSide(playerRequest.getCourtSide)
+      .racketUrl(Option(playerRequest.getRacketUrl).filter(_.trim.nonEmpty).orNull)
+      .racketName(Option(playerRequest.getRacketName).filter(_.trim.nonEmpty).orNull)
       .build()
 
   def getPlayer(playerId: UUID): Future[Option[Player]] =

@@ -5,6 +5,7 @@ import { RATING_OPTIONS } from "../../model/player/RatingOptions";
 import type { Player } from "../../model/player/Player";
 import { getErrorMessage } from "../../utils/apiError";
 import { useAuthFetch } from "../../hooks/useAuthFetch";
+import { RacketPicker } from "../../components/RacketPicker";
 
 type AccountForm = {
     firstName: string;
@@ -23,6 +24,8 @@ type PlayerForm = {
     gender: string;
     hand: string;
     courtSide: string;
+    racketUrl: string;
+    racketName: string;
 };
 type PlayerErrors = Partial<Record<keyof PlayerForm | "form", string>>;
 
@@ -53,9 +56,11 @@ export function PlayerSettingsPage() {
     const [accountSaved, setAccountSaved] = useState(false);
 
     // ── Player section ───────────────────────────────────────────────────────
+    const [racketPickerOpen, setRacketPickerOpen] = useState(false);
+
     const [player, setPlayer] = useState<Player | null>(null);
     const [loading, setLoading] = useState(true);
-    const [playerForm, setPlayerForm] = useState<PlayerForm>({ rating: "", gender: "", hand: "", courtSide: "" });
+    const [playerForm, setPlayerForm] = useState<PlayerForm>({ rating: "", gender: "", hand: "", courtSide: "", racketUrl: "", racketName: "" });
     const [playerErrors, setPlayerErrors] = useState<PlayerErrors>({});
     const [playerSubmitting, setPlayerSubmitting] = useState(false);
     const [playerSaved, setPlayerSaved] = useState(false);
@@ -96,6 +101,8 @@ export function PlayerSettingsPage() {
                     gender: p.gender,
                     hand: p.hand,
                     courtSide: p.courtSide,
+                    racketUrl: p.racketUrl ?? "",
+                    racketName: p.racketName ?? "",
                 });
             })
             .catch(() => setPlayer(null))
@@ -199,6 +206,8 @@ export function PlayerSettingsPage() {
                     gender: playerForm.gender,
                     hand: playerForm.hand,
                     courtSide: playerForm.courtSide,
+                    racketUrl: playerForm.racketUrl || undefined,
+                    racketName: playerForm.racketName || undefined,
                 }),
             });
 
@@ -220,6 +229,7 @@ export function PlayerSettingsPage() {
     if (!user) return null;
 
     return (
+        <>
         <div className="min-h-screen relative bg-cover bg-center bg-fixed"
              style={{ backgroundImage: "url('/src/assets/padelBg.jpeg')" }}>
             <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-emerald-900/60" />
@@ -241,13 +251,13 @@ export function PlayerSettingsPage() {
                 </div>
 
                 {/* Two-column layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
 
                     {/* ── Account Info ── */}
-                    <div className="backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8">
+                    <div className="backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8 flex flex-col">
                         <h2 className="text-lg font-bold text-white mb-6">Account Info</h2>
 
-                        <form onSubmit={handleAccountSubmit} className="space-y-4">
+                        <form onSubmit={handleAccountSubmit} className="flex flex-col flex-1 gap-4">
                             {accountErrors.form && (
                                 <div className="text-red-300 text-sm p-2.5 bg-red-900/20 backdrop-blur rounded-xl border border-red-500/30">
                                     {accountErrors.form}
@@ -327,20 +337,20 @@ export function PlayerSettingsPage() {
                             </div>
 
                             <button type="submit" disabled={accountSubmitting}
-                                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide mt-2">
+                                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide mt-auto">
                                 {accountSubmitting ? "Saving..." : "Save Account"}
                             </button>
                         </form>
                     </div>
 
                     {/* ── Player Profile ── */}
-                    <div className="backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8">
+                    <div className="backdrop-blur-xl bg-white/15 border border-white/30 rounded-2xl shadow-2xl p-8 flex flex-col">
                         <h2 className="text-lg font-bold text-white mb-6">Player Profile</h2>
 
                         {loading ? (
                             <p className="text-white/60 text-center py-8">Loading...</p>
                         ) : (
-                            <form onSubmit={handlePlayerSubmit} className="space-y-5">
+                            <form onSubmit={handlePlayerSubmit} className="flex flex-col flex-1 gap-5">
                                 {playerErrors.form && (
                                     <div className="text-red-300 text-sm p-2.5 bg-red-900/20 backdrop-blur rounded-xl border border-red-500/30">
                                         {playerErrors.form}
@@ -402,8 +412,47 @@ export function PlayerSettingsPage() {
                                     </div>
                                 </div>
 
+                                {/* Racket picker trigger */}
+                                <div className="flex-1 flex flex-col min-h-0">
+                                    <label className={labelClass}>Racket</label>
+                                    <div className="flex-1 flex items-stretch gap-5 px-5 py-5 rounded-xl border border-white/20 bg-white/10 min-h-0">
+                                        {playerForm.racketUrl ? (
+                                            <>
+                                                <img
+                                                    src={playerForm.racketUrl}
+                                                    alt="Selected racket"
+                                                    className="w-36 self-stretch object-cover rounded-xl bg-white/10 shrink-0"
+                                                />
+                                                <span className="text-white text-base font-semibold flex-1 self-center">{playerForm.racketName || "Racket selected"}</span>
+                                                <div className="flex flex-col items-end justify-center gap-3 shrink-0">
+                                                    <span
+                                                        onClick={() => setRacketPickerOpen(true)}
+                                                        className="text-white/50 hover:text-white text-base cursor-pointer transition-colors"
+                                                    >
+                                                        Change
+                                                    </span>
+                                                    <span
+                                                        onClick={() => setPlayerForm(f => ({ ...f, racketUrl: "", racketName: "" }))}
+                                                        className="text-red-400/70 hover:text-red-300 text-base cursor-pointer transition-colors"
+                                                    >
+                                                        Remove
+                                                    </span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div
+                                                onClick={() => setRacketPickerOpen(true)}
+                                                className="flex-1 flex flex-col items-center justify-center gap-3 text-white/40 hover:text-white/60 transition-colors cursor-pointer"
+                                            >
+                                                <span className="text-5xl">🎾</span>
+                                                <span className="text-sm">Select your racket</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <button type="submit" disabled={playerSubmitting}
-                                        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold text-lg py-4 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide mt-2">
+                                        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wide mt-auto">
                                     {playerSubmitting ? "Saving..." : "Save Changes"}
                                 </button>
                             </form>
@@ -413,6 +462,14 @@ export function PlayerSettingsPage() {
                 </div>
             </div>
         </div>
+
+        <RacketPicker
+            open={racketPickerOpen}
+            currentUrl={playerForm.racketUrl || null}
+            onSelect={(url, name) => { setPlayerForm(f => ({ ...f, racketUrl: url, racketName: name })); setRacketPickerOpen(false); }}
+            onClose={() => setRacketPickerOpen(false)}
+        />
+        </>
     );
 }
 
