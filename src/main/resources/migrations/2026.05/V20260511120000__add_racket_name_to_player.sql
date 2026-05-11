@@ -1,0 +1,1 @@
+ALTER TABLE player ADD COLUMN racket_name VARCHAR(200);

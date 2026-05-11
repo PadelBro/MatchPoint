@@ -31,4 +31,8 @@ public class UpsertPlayerRequest {
 
     @NonNull
     Side courtSide;
+
+    String racketUrl;
+
+    String racketName;
 }

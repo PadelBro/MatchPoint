@@ -27,30 +27,38 @@ class PlayerRepository(val jdbcTemplate: NamedParameterJdbcTemplate, mapper: Obj
         |  rating,
         |  gender,
         |  hand,
-        |  court_side
+        |  court_side,
+        |  racket_url,
+        |  racket_name
         |) VALUES (
         |  :id,
         |  :userId,
         |  :rating,
         |  :gender,
         |  :hand,
-        |  :courtSide
+        |  :courtSide,
+        |  :racketUrl,
+        |  :racketName
         |)
         |ON CONFLICT (id) DO UPDATE SET
         |  rating = EXCLUDED.rating,
         |  gender = EXCLUDED.gender,
         |  hand = EXCLUDED.hand,
         |  court_side = EXCLUDED.court_side,
+        |  racket_url = EXCLUDED.racket_url,
+        |  racket_name = EXCLUDED.racket_name,
         |  updated_at = extract(epoch from now()) * 1000
         |RETURNING *
         |""".stripMargin,
       Map(
-        "id"       -> Option(player.getId).getOrElse(java.util.UUID.randomUUID()),
-        "userId"   -> player.getUserId,
-        "rating"   -> player.getRating.value,
-        "gender"   -> player.getGender.value,
-        "hand"     -> player.getHand.value,
-        "courtSide" -> player.getCourtSide.value
+        "id"         -> Option(player.getId).getOrElse(java.util.UUID.randomUUID()),
+        "userId"     -> player.getUserId,
+        "rating"     -> player.getRating.value,
+        "gender"     -> player.getGender.value,
+        "hand"       -> player.getHand.value,
+        "courtSide"  -> player.getCourtSide.value,
+        "racketUrl"  -> player.getRacketUrl,
+        "racketName" -> player.getRacketName
       )
     )
   }
