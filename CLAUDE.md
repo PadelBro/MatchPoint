@@ -136,6 +136,15 @@ class MySpec extends AnyFlatSpec with BeforeAndAfterEach {
 - Pre-fills the form if a player exists; shows an informational notice if not (first-time setup).
 - Saves via `POST /api/players` (upsert) — sends the existing `player.id` when updating, omits it when creating.
 - The profile name in the navbar (`MainPage.tsx`) is a `<Link to="/settings">` when logged in.
+- Racket picker (`RacketPicker.tsx`) lets users browse and select a racket from the Cloudinary catalog; selection stores both `racketUrl` and `racketName` in form state.
+- `racketUrl` and `racketName` are saved to the DB and pre-filled on load — name persists across navigation.
+
+**Racket catalog (`CloudinaryService.scala` → `GET /api/rackets`)**:
+- Uses Cloudinary Search API (`POST /v1_1/{cloud}/resources/search`) — a single paginated call (max 500 results per page) to fetch all images.
+- **Dynamic-folder Cloudinary accounts**: `public_id` is just the filename; `asset_folder` holds the path. Reconstruct full path as `asset_folder + "/" + public_id`. Do NOT use the Resources API with `prefix=` — it returns 0 results for dynamic-folder accounts.
+- Hierarchy: `rackets/{brand}/{year}/{model}/{image}` — groups into `List[RacketBrandDto]`.
+- Results are cached with a 10-hour TTL. Cache is warmed at startup via `@PostConstruct warmUp()` which logs `rackets_cache_warmed brands=N total_models=M`.
+- Config properties: `cloudinary.cloud-name`, `cloudinary.api-key`, `cloudinary.api-secret`, `cloudinary.rackets-prefix` (all in `application.properties` with env-var overrides).
 
 **Tournament list / filter page** (`/tournaments` → `TournamentListPage.tsx`):
 - Filters persisted in `sessionStorage` under key `"tournamentFilters"` — restored on mount.
